@@ -1,0 +1,30 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Windows specific
+windows/flutter/ephemeral/
+windows/flutter/generated_config.cmake
+build/windows/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.lock
+!pubspec.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+build_log.txt
+doc_content.txt
