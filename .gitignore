@@ -6,11 +6,49 @@
 .pub-cache/
 .pub/
 build/
+.flutter_settings
 
 # Windows specific
 windows/flutter/ephemeral/
 windows/flutter/generated_config.cmake
 build/windows/
+
+# macOS specific (Flutter auto-generated)
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/ephemeral/
+macos/Flutter/flutter_export_environment.sh
+macos/Pods/
+macos/Podfile.lock
+macos/.symlinks/
+macos/Runner.xcworkspace/xcuserdata/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+**/xcuserdata/
+**/*.xcuserstate
+**/DerivedData/
+
+# iOS specific (in case you add iOS later)
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Android specific (in case you add Android later)
+android/.gradle/
+android/captures/
+android/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/key.properties
+**/*.keystore
+**/*.jks
 
 # IDEs
 .idea/
@@ -22,9 +60,28 @@ build/windows/
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Logs
 *.log
 build_log.txt
 doc_content.txt
+
+# Local app data (sqlite, exports, temp)
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+appdata/
+.cache/
+.tmp/
+
+# Env / secrets
+.env
+.env.*
+!.env.example

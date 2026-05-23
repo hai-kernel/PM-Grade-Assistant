@@ -333,7 +333,7 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
               widget.student.status == GradingStatus.graded
                   ? 'Đã lưu bài này'
                   : 'Lưu bài này',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.bold,
                 fontSize: 13,

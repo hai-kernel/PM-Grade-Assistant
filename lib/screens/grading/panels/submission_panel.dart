@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -87,10 +89,14 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.assignment_outlined, size: 56, color: AppColors.textMuted.withOpacity(0.4)),
+            Icon(Icons.assignment_outlined,
+                size: 56, color: AppColors.textMuted.withOpacity(0.4)),
             const SizedBox(height: 16),
             const Text('Chọn một sinh viên để bắt đầu chấm điểm',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 14, fontFamily: 'Inter')),
+                style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 14,
+                    fontFamily: 'Inter')),
           ],
         ),
       ),
@@ -127,14 +133,21 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             height: 32,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.accent.withOpacity(0.8), AppColors.purple.withOpacity(0.8)],
+                colors: [
+                  AppColors.accent.withOpacity(0.8),
+                  AppColors.purple.withOpacity(0.8)
+                ],
               ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Text(
                 (student.name ?? student.alias)[0].toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14, fontFamily: 'Inter'),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    fontFamily: 'Inter'),
               ),
             ),
           ),
@@ -144,9 +157,16 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(student.name ?? student.alias,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Inter')),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter')),
                 Text(student.alias,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFamily: 'Inter')),
+                    style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontFamily: 'Inter')),
               ],
             ),
           ),
@@ -160,9 +180,18 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                        color: statusColor, shape: BoxShape.circle)),
                 const SizedBox(width: 5),
-                Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                Text(statusLabel,
+                    style: TextStyle(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -171,7 +200,8 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     );
   }
 
-  Widget _buildSubmissionContent(BuildContext context, AppStateProvider state, StudentSubmission student) {
+  Widget _buildSubmissionContent(
+      BuildContext context, AppStateProvider state, StudentSubmission student) {
     return Container(
       color: AppColors.bg0,
       child: Column(
@@ -185,23 +215,36 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.article_outlined, size: 14, color: AppColors.textSecondary),
+                const Icon(Icons.article_outlined,
+                    size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   '${student.alias}.txt',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500),
                 ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () => _showExamDialog(context, state),
-                  icon: const Icon(Icons.description_outlined, size: 14, color: AppColors.accent),
-                  label: const Text('Xem đề thi', style: TextStyle(color: AppColors.accent, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                  icon: const Icon(Icons.description_outlined,
+                      size: 14, color: AppColors.accent),
+                  label: const Text('Xem đề thi',
+                      style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600)),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     backgroundColor: AppColors.accent.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -233,24 +276,42 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
   }
 
   void _showExamDialog(BuildContext context, AppStateProvider state) {
+    final examPath = state.setupData.examFilePath;
+    final examName = state.setupData.examFileName;
+    final isImage = _isImagePath(examPath ?? examName ?? '');
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: AppColors.bg1,
         child: Container(
-          width: 800,
-          height: 600,
+          width: 900,
+          height: 680,
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.description_outlined, color: AppColors.accent, size: 24),
+                  Icon(
+                    isImage ? Icons.image_outlined : Icons.description_outlined,
+                    color: AppColors.accent,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
-                  Text(state.setupData.examFileName ?? 'Nội dung đề thi', style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      examName ?? 'Nội dung đề thi',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Inter',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
                     icon: const Icon(Icons.close, color: AppColors.textMuted),
@@ -261,26 +322,16 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
               Expanded(
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.bg0,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.border0),
                   ),
-                  child: Scrollbar(
-                    child: SingleChildScrollView(
-                      child: SelectableText(
-                        state.setupData.examContent.isEmpty
-                            ? 'Chưa tải nội dung đề thi...'
-                            : state.setupData.examContent,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontFamily: 'Inter',
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
+                  child: _buildExamPreview(
+                    examPath: examPath,
+                    examContent: state.setupData.examContent,
+                    isImage: isImage,
                   ),
                 ),
               ),
@@ -289,8 +340,11 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent, foregroundColor: Colors.white),
-                  child: const Text('Đóng', style: TextStyle(fontFamily: 'Inter')),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white),
+                  child:
+                      const Text('Đóng', style: TextStyle(fontFamily: 'Inter')),
                 ),
               ),
             ],
@@ -300,7 +354,86 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     );
   }
 
-  Widget _buildBottomSection(BuildContext context, AppStateProvider state, StudentSubmission student) {
+  Widget _buildExamPreview({
+    required String? examPath,
+    required String examContent,
+    required bool isImage,
+  }) {
+    if (isImage && examPath != null && examPath.isNotEmpty) {
+      final file = File(examPath);
+      if (file.existsSync()) {
+        return InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 5,
+          child: Center(
+            child: Image.file(
+              file,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => _buildExamFallback(
+                'Không thể hiển thị ảnh đề thi.\nĐường dẫn: $examPath',
+              ),
+            ),
+          ),
+        );
+      }
+      return _buildExamFallback(
+        'Không tìm thấy file đề thi tại:\n$examPath',
+      );
+    }
+
+    return Scrollbar(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(4),
+        child: SelectableText(
+          examContent.isEmpty ? 'Chưa tải nội dung đề thi...' : examContent,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontFamily: 'Inter',
+            height: 1.6,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExamFallback(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.broken_image_outlined,
+                size: 48, color: AppColors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontFamily: 'Inter',
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isImagePath(String pathOrName) {
+    final lower = pathOrName.toLowerCase();
+    return lower.endsWith('.png') ||
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.webp') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.bmp');
+  }
+
+  Widget _buildBottomSection(
+      BuildContext context, AppStateProvider state, StudentSubmission student) {
     return Container(
       color: AppColors.bg1,
       child: Column(
@@ -355,20 +488,33 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     final total = student.computedTotal;
     final max = student.maxTotal;
     final scale10 = student.computedScale10;
-    Color scoreColor = scale10 >= 8 ? AppColors.success : scale10 >= 6.5 ? AppColors.warning : AppColors.danger;
+    Color scoreColor = scale10 >= 8
+        ? AppColors.success
+        : scale10 >= 6.5
+            ? AppColors.warning
+            : AppColors.danger;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(color: AppColors.bg3),
       child: Row(
         children: [
-          const Icon(Icons.calculate_outlined, size: 14, color: AppColors.textSecondary),
+          const Icon(Icons.calculate_outlined,
+              size: 14, color: AppColors.textSecondary),
           const SizedBox(width: 6),
-          const Text('Điểm tổng hợp:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontFamily: 'Inter')),
+          const Text('Điểm tổng hợp:',
+              style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontFamily: 'Inter')),
           const SizedBox(width: 10),
           Text(
             '${total.toStringAsFixed(1)} / ${max.toStringAsFixed(0)} điểm',
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Inter'),
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter'),
           ),
           const SizedBox(width: 16),
           Container(
@@ -380,13 +526,18 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             ),
             child: Text(
               '${scale10.toStringAsFixed(2)} / 10',
-              style: TextStyle(color: scoreColor, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Inter'),
+              style: TextStyle(
+                  color: scoreColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Inter'),
             ),
           ),
           const Spacer(),
           if (student.criteria.isNotEmpty) ...[
             for (final c in student.criteria.take(3)) ...[
-              _MiniScoreBadge(label: c.id, score: c.totalScore, max: c.totalMaxScore),
+              _MiniScoreBadge(
+                  label: c.id, score: c.totalScore, max: c.totalMaxScore),
               const SizedBox(width: 6),
             ],
           ],
@@ -422,9 +573,18 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
               children: [
                 Icon(icon, size: 13, color: iconColor),
                 const SizedBox(width: 5),
-                Text(label, style: TextStyle(color: iconColor, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Inter')),
+                Text(label,
+                    style: TextStyle(
+                        color: iconColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter')),
                 const SizedBox(width: 6),
-                Text('($subtitle)', style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFamily: 'Inter')),
+                Text('($subtitle)',
+                    style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontFamily: 'Inter')),
               ],
             ),
           ),
@@ -432,10 +592,17 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             controller: controller,
             onChanged: onChanged,
             maxLines: 3,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontFamily: 'Inter', height: 1.5),
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontFamily: 'Inter',
+                height: 1.5),
             decoration: const InputDecoration(
               hintText: 'Nhập nhận xét...',
-              hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12, fontFamily: 'Inter'),
+              hintStyle: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                  fontFamily: 'Inter'),
               border: InputBorder.none,
               contentPadding: EdgeInsets.fromLTRB(10, 0, 10, 10),
               filled: false,
@@ -459,7 +626,12 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                   Expanded(
                     child: Text(
                       autoText,
-                      style: TextStyle(color: iconColor, fontSize: 12, fontFamily: 'Inter', fontStyle: FontStyle.italic, height: 1.4),
+                      style: TextStyle(
+                          color: iconColor,
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                          fontStyle: FontStyle.italic,
+                          height: 1.4),
                     ),
                   ),
                 ],
@@ -470,60 +642,79 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     );
   }
 
-  Widget _buildFinalizeButton(BuildContext context, AppStateProvider state, StudentSubmission student) {
+  Widget _buildFinalizeButton(
+      BuildContext context, AppStateProvider state, StudentSubmission student) {
     final isGraded = student.status == GradingStatus.graded;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isGraded ? null : () => _showFinalizeSummaryDialog(context, state, student),
+        onPressed: isGraded
+            ? null
+            : () => _showFinalizeSummaryDialog(context, state, student),
         style: ElevatedButton.styleFrom(
           backgroundColor: isGraded ? AppColors.bg4 : AppColors.success,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        icon: Icon(isGraded ? Icons.check_circle_rounded : Icons.save_alt_rounded, size: 16),
+        icon: Icon(
+            isGraded ? Icons.check_circle_rounded : Icons.save_alt_rounded,
+            size: 16),
         label: Text(
           isGraded ? 'Đã lưu bài này' : 'Lưu bài này',
-          style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
+          style: const TextStyle(
+              fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
         ),
       ),
     );
   }
 
-  void _showFinalizeSummaryDialog(BuildContext context, AppStateProvider state, StudentSubmission student) {
+  void _showFinalizeSummaryDialog(
+      BuildContext context, AppStateProvider state, StudentSubmission student) {
     showDialog(
       context: context,
       builder: (ctx) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           backgroundColor: AppColors.bg1,
           child: Container(
             width: 600,
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85),
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.fact_check_outlined, color: AppColors.accent, size: 28),
+                    const Icon(Icons.fact_check_outlined,
+                        color: AppColors.accent, size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Xác nhận điểm: ${student.name ?? student.alias}',
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter'),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.success.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '${student.computedTotal.toStringAsFixed(1)} / ${student.maxTotal.toStringAsFixed(0)}',
-                        style: const TextStyle(color: AppColors.success, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                        style: const TextStyle(
+                            color: AppColors.success,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter'),
                       ),
                     ),
                   ],
@@ -534,18 +725,30 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                     children: [
                       // General Comments
                       if (student.finalPublicComment.isNotEmpty) ...[
-                        _buildSummaryComment('Nhận xét công khai', student.finalPublicComment, Icons.public, AppColors.cyan),
+                        _buildSummaryComment(
+                            'Nhận xét công khai',
+                            student.finalPublicComment,
+                            Icons.public,
+                            AppColors.cyan),
                         const SizedBox(height: 12),
                       ],
                       if (student.finalPrivateNote.isNotEmpty) ...[
-                        _buildSummaryComment('Ghi chú riêng tư', student.finalPrivateNote, Icons.lock, AppColors.purple),
+                        _buildSummaryComment(
+                            'Ghi chú riêng tư',
+                            student.finalPrivateNote,
+                            Icons.lock,
+                            AppColors.purple),
                         const SizedBox(height: 16),
                       ],
                       const Divider(color: AppColors.border0),
                       const SizedBox(height: 12),
                       const Text(
                         'Chi tiết điểm từng câu:',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter'),
                       ),
                       const SizedBox(height: 12),
                       // Criteria details
@@ -563,27 +766,40 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                             children: [
                               Text(
                                 '${c.id} — ${c.name} (${c.totalScore.toStringAsFixed(1)}/${c.totalMaxScore.toStringAsFixed(0)})',
-                                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13, fontFamily: 'Inter'),
+                                style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    fontFamily: 'Inter'),
                               ),
                               const SizedBox(height: 8),
                               for (final sc in c.subCriteria) ...[
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 8, bottom: 6),
+                                  padding:
+                                      const EdgeInsets.only(left: 8, bottom: 6),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           Expanded(
                                             child: Text(
                                               '• ${sc.name}',
-                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontFamily: 'Inter'),
+                                              style: const TextStyle(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                  fontSize: 12,
+                                                  fontFamily: 'Inter'),
                                             ),
                                           ),
                                           Text(
                                             '${sc.effectiveScore.toStringAsFixed(1)}/${sc.maxScore.toStringAsFixed(0)}',
                                             style: TextStyle(
-                                              color: sc.effectiveScore < sc.maxScore ? AppColors.danger : AppColors.success,
+                                              color: sc.effectiveScore <
+                                                      sc.maxScore
+                                                  ? AppColors.danger
+                                                  : AppColors.success,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
                                               fontFamily: 'Inter',
@@ -591,18 +807,28 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                                           ),
                                         ],
                                       ),
-                                      if (sc.deductReason != null && sc.deductReason!.isNotEmpty)
+                                      if (sc.deductReason != null &&
+                                          sc.deductReason!.isNotEmpty)
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 12, top: 4),
+                                          padding: const EdgeInsets.only(
+                                              left: 12, top: 4),
                                           child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              const Icon(Icons.info_outline, size: 12, color: AppColors.danger),
+                                              const Icon(Icons.info_outline,
+                                                  size: 12,
+                                                  color: AppColors.danger),
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
                                                   'Lý do trừ: ${sc.deductReason}',
-                                                  style: const TextStyle(color: AppColors.danger, fontSize: 11, fontStyle: FontStyle.italic, fontFamily: 'Inter'),
+                                                  style: const TextStyle(
+                                                      color: AppColors.danger,
+                                                      fontSize: 11,
+                                                      fontStyle:
+                                                          FontStyle.italic,
+                                                      fontFamily: 'Inter'),
                                                 ),
                                               ),
                                             ],
@@ -625,14 +851,14 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Kiểm tra lại', style: TextStyle(color: AppColors.textSecondary)),
+                      child: const Text('Kiểm tra lại',
+                          style: TextStyle(color: AppColors.textSecondary)),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        final path =
-                            await state.finalizeAndSaveGrading();
+                        final path = await state.finalizeAndSaveGrading();
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -663,7 +889,8 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     );
   }
 
-  Widget _buildSummaryComment(String title, String content, IconData icon, Color color) {
+  Widget _buildSummaryComment(
+      String title, String content, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -678,11 +905,21 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             children: [
               Icon(icon, size: 14, color: color),
               const SizedBox(width: 6),
-              Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12, fontFamily: 'Inter')),
+              Text(title,
+                  style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontFamily: 'Inter')),
             ],
           ),
           const SizedBox(height: 6),
-          Text(content, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.5, fontFamily: 'Inter')),
+          Text(content,
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  height: 1.5,
+                  fontFamily: 'Inter')),
         ],
       ),
     );
@@ -699,7 +936,9 @@ class _TabChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.accent.withOpacity(0.15) : Colors.transparent,
+        color: isSelected
+            ? AppColors.accent.withOpacity(0.15)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(label,
@@ -717,12 +956,17 @@ class _MiniScoreBadge extends StatelessWidget {
   final String label;
   final double score;
   final double max;
-  const _MiniScoreBadge({required this.label, required this.score, required this.max});
+  const _MiniScoreBadge(
+      {required this.label, required this.score, required this.max});
 
   @override
   Widget build(BuildContext context) {
     final pct = max > 0 ? score / max : 0.0;
-    final color = pct >= 0.8 ? AppColors.success : pct >= 0.65 ? AppColors.warning : AppColors.danger;
+    final color = pct >= 0.8
+        ? AppColors.success
+        : pct >= 0.65
+            ? AppColors.warning
+            : AppColors.danger;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -732,7 +976,11 @@ class _MiniScoreBadge extends StatelessWidget {
       ),
       child: Text(
         '$label: ${score.toStringAsFixed(0)}/${max.toStringAsFixed(0)}',
-        style: TextStyle(color: color, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w500),
+        style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -760,7 +1008,8 @@ class _ResizeDividerVerticalState extends State<_ResizeDividerVertical> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           height: 6,
-          color: _hovered ? AppColors.accent.withOpacity(0.6) : AppColors.border0,
+          color:
+              _hovered ? AppColors.accent.withOpacity(0.6) : AppColors.border0,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -769,7 +1018,9 @@ class _ResizeDividerVerticalState extends State<_ResizeDividerVertical> {
                   width: 32,
                   height: 3,
                   decoration: BoxDecoration(
-                    color: _hovered ? Colors.white : AppColors.textMuted.withOpacity(0.4),
+                    color: _hovered
+                        ? Colors.white
+                        : AppColors.textMuted.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),

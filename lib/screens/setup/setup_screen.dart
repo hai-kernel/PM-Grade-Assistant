@@ -47,7 +47,6 @@ class _SetupScreenState extends State<SetupScreen> {
     },
   ];
   Map<String, dynamic>? _selectedSession;
-  bool _importExpanded = false;
   String _studentSearch = '';
 
   void _onSessionSelected(Map<String, dynamic> session) {
@@ -117,7 +116,8 @@ class _SetupScreenState extends State<SetupScreen> {
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 1000),
                       child: ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 30),
                         children: [
                           // ─── Hero Banner ───
                           Container(
@@ -141,13 +141,16 @@ class _SetupScreenState extends State<SetupScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
                                         child: const Text(
                                           '🎉 Chào mừng trở lại!',
@@ -184,14 +187,20 @@ class _SetupScreenState extends State<SetupScreen> {
                                       const SizedBox(height: 24),
                                       ElevatedButton.icon(
                                         onPressed: _onCreateSession,
-                                        icon: const Icon(Icons.add_rounded, size: 18),
-                                        label: const Text('Tạo phiên chấm mới', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                                        icon: const Icon(Icons.add_rounded,
+                                            size: 18),
+                                        label: const Text('Tạo phiên chấm mới',
+                                            style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontWeight: FontWeight.w600)),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.white,
                                           foregroundColor: AppColors.accent,
-                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 14),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
                                           elevation: 0,
                                         ),
@@ -208,44 +217,14 @@ class _SetupScreenState extends State<SetupScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
-                                    child: Icon(Icons.auto_awesome_mosaic_rounded, size: 70, color: Colors.white.withOpacity(0.9)),
+                                    child: Icon(
+                                        Icons.auto_awesome_mosaic_rounded,
+                                        size: 70,
+                                        color: Colors.white.withOpacity(0.9)),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 40),
-                          
-                          // ─── Features ───
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildFeatureInfoCard(
-                                  icon: Icons.psychology_outlined,
-                                  color: AppColors.purple,
-                                  title: 'AI Assistant Grading',
-                                  desc: 'Chấm thông minh, phân tích lỗi logic chi tiết.',
-                                ),
-                              ),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                child: _buildFeatureInfoCard(
-                                  icon: Icons.table_view_outlined,
-                                  color: AppColors.success,
-                                  title: 'Báo cáo Excel',
-                                  desc: 'Xuất kết quả Double-Header chuẩn chỉ, kèm nhận xét.',
-                                ),
-                              ),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                child: _buildFeatureInfoCard(
-                                  icon: Icons.account_tree_outlined,
-                                  color: AppColors.accent,
-                                  title: 'Quản lý lịch sử',
-                                  desc: 'Theo dõi tiến độ, tra cứu lịch sử dễ dàng.',
-                                ),
-                              ),
-                            ],
                           ),
                           const SizedBox(height: 40),
 
@@ -300,7 +279,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       ),
                       const SizedBox(width: 16),
                       SizedBox(
-                        width: 300,
+                        width: 380,
                         child: _buildSessionSidebar(context, state),
                       ),
                     ],
@@ -324,8 +303,7 @@ class _SetupScreenState extends State<SetupScreen> {
 
   Widget _buildSessionHeaderCard(AppStateProvider state) {
     final session = _selectedSession!;
-    final progress =
-        (session['progress'] as num?)?.toDouble() ?? 0.0;
+    final progress = (session['progress'] as num?)?.toDouble() ?? 0.0;
     final gradedPct = state.students.isEmpty
         ? progress
         : state.gradedCount / state.students.length;
@@ -360,7 +338,8 @@ class _SetupScreenState extends State<SetupScreen> {
                         fontWeight: FontWeight.w600)),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -394,7 +373,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     Text(
                       'Mã đề ${session['examCode']} · ${session['semester']}',
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         fontFamily: 'Inter',
@@ -433,7 +412,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       Text(
                         '${(gradedPct * 100).toStringAsFixed(0)}%',
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: AppColors.accent,
                           fontFamily: 'Inter',
@@ -442,7 +421,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       const Text(
                         'tiến độ chấm',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: AppColors.textMuted,
                           fontFamily: 'Inter',
                         ),
@@ -470,7 +449,7 @@ class _SetupScreenState extends State<SetupScreen> {
                 Text(
                   '${state.gradedCount}/${state.students.length} bài đã chấm',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.textSecondary,
                     fontFamily: 'Inter',
                   ),
@@ -479,7 +458,7 @@ class _SetupScreenState extends State<SetupScreen> {
                 Text(
                   'Ngưỡng qua môn: ${AppStateProvider.passScaleThreshold.toStringAsFixed(1)}/10',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.textMuted,
                     fontFamily: 'Inter',
                   ),
@@ -497,13 +476,7 @@ class _SetupScreenState extends State<SetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildGradingOverviewCard(state),
-        const SizedBox(height: 12),
-        Expanded(
-          child: SingleChildScrollView(
-            child: _buildImportSection(context),
-          ),
-        ),
+        Expanded(child: _buildImportSection(context)),
         const SizedBox(height: 12),
         _buildActionButton(context),
         if (ready < 4)
@@ -523,84 +496,14 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
-  Widget _buildGradingOverviewCard(AppStateProvider state) {
-    final total = state.students.length;
-    final pct = total == 0 ? 0.0 : state.gradedCount / total;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.insights_outlined,
-                  size: 16, color: AppColors.accent),
-              SizedBox(width: 8),
-              Text(
-                'Tổng quan chấm',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _OverviewLine(
-            label: 'Phân công',
-            value: '$total SV',
-            color: AppColors.accent,
-          ),
-          _OverviewLine(
-            label: 'Đã chấm',
-            value: '${state.gradedCount}',
-            color: AppColors.success,
-          ),
-          _OverviewLine(
-            label: 'Chưa xong',
-            value: '${state.pendingGradeCount}',
-            color: AppColors.textMuted,
-          ),
-          _OverviewLine(
-            label: 'Qua / Rớt',
-            value: '${state.passCount} / ${state.failCount}',
-            color: AppColors.purple,
-          ),
-          if (total > 0) ...[
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: pct,
-                minHeight: 5,
-                backgroundColor: AppColors.bg4,
-                color: AppColors.success,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildStudentPanel(BuildContext context, AppStateProvider state) {
-    final students = state.students
-        .where((s) {
-          if (_studentSearch.isEmpty) return true;
-          final q = _studentSearch.toLowerCase();
-          return s.alias.toLowerCase().contains(q) ||
-              (s.name?.toLowerCase().contains(q) ?? false) ||
-              (s.marker?.toLowerCase().contains(q) ?? false);
-        })
-        .toList();
+    final students = state.students.where((s) {
+      if (_studentSearch.isEmpty) return true;
+      final q = _studentSearch.toLowerCase();
+      return s.alias.toLowerCase().contains(q) ||
+          (s.name?.toLowerCase().contains(q) ?? false) ||
+          (s.marker?.toLowerCase().contains(q) ?? false);
+    }).toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -629,7 +532,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   'Danh sách sinh viên',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: 16,
                     color: AppColors.textPrimary,
                     fontFamily: 'Inter',
                   ),
@@ -647,7 +550,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     style: const TextStyle(
                       color: AppColors.accent,
                       fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                      fontSize: 13,
                       fontFamily: 'Inter',
                     ),
                   ),
@@ -666,12 +569,17 @@ class _SetupScreenState extends State<SetupScreen> {
             child: TextField(
               onChanged: (v) => setState(() => _studentSearch = v),
               style: const TextStyle(
-                  fontSize: 12, fontFamily: 'Inter', color: AppColors.textPrimary),
+                  fontSize: 13,
+                  fontFamily: 'Inter',
+                  color: AppColors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Tìm theo alias, tên, giảng viên...',
                 hintStyle: const TextStyle(
-                    fontSize: 12, color: AppColors.textMuted, fontFamily: 'Inter'),
-                prefixIcon: const Icon(Icons.search, size: 16, color: AppColors.textMuted),
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                    fontFamily: 'Inter'),
+                prefixIcon: const Icon(Icons.search,
+                    size: 16, color: AppColors.textMuted),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 filled: true,
@@ -739,14 +647,16 @@ class _SetupScreenState extends State<SetupScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: const [
-                  SizedBox(width: 28, child: Text('#',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                          fontFamily: 'Inter'))),
+                  SizedBox(
+                      width: 32,
+                      child: Text('#',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textMuted,
+                              fontFamily: 'Inter'))),
                   Expanded(
-                    flex: 2,
+                    flex: 3,
                     child: Text('Alias / Mã SV',
                         style: TextStyle(
                             fontSize: 10,
@@ -755,7 +665,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             fontFamily: 'Inter')),
                   ),
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: Text('Họ tên',
                         style: TextStyle(
                             fontSize: 10,
@@ -765,24 +675,16 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text('Giảng viên',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textMuted,
-                            fontFamily: 'Inter')),
-                  ),
-                  SizedBox(
-                    width: 76,
                     child: Text('Trạng thái',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textMuted,
                             fontFamily: 'Inter')),
                   ),
-                  SizedBox(
-                    width: 52,
+                  Expanded(
+                    flex: 1,
                     child: Text('Điểm',
                         textAlign: TextAlign.end,
                         style: TextStyle(
@@ -799,8 +701,7 @@ class _SetupScreenState extends State<SetupScreen> {
               child: ListView.builder(
                 itemCount: students.length,
                 itemBuilder: (context, i) {
-                  final originalIndex =
-                      state.students.indexOf(students[i]);
+                  final originalIndex = state.students.indexOf(students[i]);
                   return _StudentPreviewRow(
                     student: students[i],
                     index: originalIndex,
@@ -910,62 +811,6 @@ class _SetupScreenState extends State<SetupScreen> {
           ];
         }),
       ],
-    );
-  }
-
-  Widget _buildFeatureInfoCard({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String desc,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border0),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            desc,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              fontFamily: 'Inter',
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1088,21 +933,37 @@ class _SetupScreenState extends State<SetupScreen> {
     var n = 0;
     if (state.setupData.examFileName != null) n++;
     if (state.setupData.gradingGuideFileName != null) n++;
-    if (state.setupData.csvFileName != null) n++;
-    if (state.setupData.submissionFolderPath != null) n++;
+    if (state.uploadedCSVs.isNotEmpty) n++;
+    if (state.uploadedSubmissionFolders.isNotEmpty) n++;
     return n;
   }
 
   Widget _buildSummaryStats(AppStateProvider state) {
     final stats = [
-      (Icons.assignment_ind_outlined, 'Phân công', state.assignedCount,
-          AppColors.accent),
-      (Icons.check_circle_outline, 'Đã chấm', state.gradedCount,
-          AppColors.success),
-      (Icons.pending_outlined, 'Chưa chấm', state.pendingGradeCount,
-          AppColors.warning),
-      (Icons.emoji_events_outlined, 'Qua môn', state.passCount,
-          AppColors.success),
+      (
+        Icons.assignment_ind_outlined,
+        'Phân công',
+        state.assignedCount,
+        AppColors.accent
+      ),
+      (
+        Icons.check_circle_outline,
+        'Đã chấm',
+        state.gradedCount,
+        AppColors.success
+      ),
+      (
+        Icons.pending_outlined,
+        'Chưa chấm',
+        state.pendingGradeCount,
+        AppColors.warning
+      ),
+      (
+        Icons.emoji_events_outlined,
+        'Qua môn',
+        state.passCount,
+        AppColors.success
+      ),
       (Icons.cancel_outlined, 'Rớt môn', state.failCount, AppColors.danger),
     ];
 
@@ -1126,149 +987,171 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget _buildImportSection(BuildContext context) {
     final state = context.watch<AppStateProvider>();
     final ready = _importReadyCount(state);
+    final selectedCsvName = state.selectedCSVIndex >= 0 &&
+            state.selectedCSVIndex < state.uploadedCSVs.length
+        ? state.uploadedCSVs[state.selectedCSVIndex]['name']
+        : null;
+    final latestFolderName = state.uploadedSubmissionFolders.isNotEmpty
+        ? state.uploadedSubmissionFolders.last['name']
+        : null;
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border0),
       ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _importExpanded = !_importExpanded),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                children: [
-                  Icon(
-                    _importExpanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.upload_file_outlined,
-                      size: 16, color: AppColors.textSecondary),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Thiết lập tài liệu & dữ liệu',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '$ready/4 đã tải',
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.upload_file_outlined,
+                    size: 18, color: AppColors.textSecondary),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Thiết lập tài liệu & dữ liệu',
                     style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: ready == 4
-                          ? AppColors.success
-                          : AppColors.textMuted,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                       fontFamily: 'Inter',
                     ),
                   ),
-                ],
+                ),
+                Text(
+                  '$ready/4 đã tải',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: ready == 4 ? AppColors.success : AppColors.textMuted,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Import đủ 4 mục để bật chấm điểm tự động.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                  fontFamily: 'Inter',
+                ),
               ),
             ),
-          ),
-          if (_importExpanded) ...[
+            const SizedBox(height: 10),
             const Divider(height: 1, color: AppColors.border0),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: Column(
-                children: [
-                  _buildImportRow(
-                    icon: Icons.description_outlined,
-                    label: 'Đề thi',
-                    typeLabel: 'DOCX',
-                    color: AppColors.accent,
-                    fileName: state.setupData.examFileName,
-                    onPick: () async => _pickFile(context, 'exam'),
-                  ),
-                  _buildImportRow(
-                    icon: Icons.rule_rounded,
-                    label: 'Barem chấm điểm',
-                    typeLabel: 'DOCX',
-                    color: AppColors.purple,
-                    fileName: state.setupData.gradingGuideFileName,
-                    onPick: () async => _pickFile(context, 'guide'),
-                  ),
-                  _buildImportRow(
-                    icon: Icons.table_chart_outlined,
-                    label: 'Danh sách sinh viên',
-                    typeLabel: 'CSV',
-                    color: AppColors.success,
-                    fileName: state.setupData.csvFileName,
-                    onPick: () async => _pickFile(context, 'csv'),
-                  ),
-                  if (state.uploadedCSVs.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 40, bottom: 4),
-                      child: Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children:
-                            List.generate(state.uploadedCSVs.length, (idx) {
-                          final csv = state.uploadedCSVs[idx];
-                          final isSelected = state.selectedCSVIndex == idx;
-                          return InkWell(
-                            onTap: () => state.selectCSVFile(idx),
-                            borderRadius: BorderRadius.circular(4),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.successBg
-                                    : AppColors.bg2,
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.success
-                                      : AppColors.border0,
-                                ),
-                              ),
-                              child: Text(
-                                csv['name']!,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: isSelected
-                                      ? AppColors.success
-                                      : AppColors.textMuted,
-                                  fontFamily: 'Inter',
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  _buildImportRow(
-                    icon: Icons.folder_open_rounded,
-                    label: 'Thư mục bài thi',
-                    typeLabel: 'FOLDER',
-                    color: AppColors.warning,
-                    fileName: state.setupData.submissionFolderPath != null
-                        ? state.setupData.submissionFolderPath!
-                            .split('/')
-                            .last
-                        : null,
-                    onPick: () async => _pickFile(context, 'folder'),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 6),
+            _buildImportRow(
+              icon: Icons.image_outlined,
+              label: 'Đề thi',
+              typeLabel: 'PNG/JPG',
+              color: AppColors.accent,
+              fileName: state.setupData.examFileName,
+              onPick: () async => _pickFile(context, 'exam'),
             ),
+            _buildImportRow(
+              icon: Icons.rule_rounded,
+              label: 'Barem chấm điểm',
+              typeLabel: 'DOCX',
+              color: AppColors.purple,
+              fileName: state.setupData.gradingGuideFileName,
+              onPick: () async => _pickFile(context, 'guide'),
+            ),
+            _buildImportRow(
+              icon: Icons.table_chart_outlined,
+              label: 'Danh sách sinh viên',
+              typeLabel: 'CSV/XLSX',
+              color: AppColors.success,
+              fileName: selectedCsvName,
+              onPick: () async => _pickFile(context, 'csv'),
+            ),
+            if (state.uploadedCSVs.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 40, bottom: 4),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: List.generate(state.uploadedCSVs.length, (idx) {
+                    final csv = state.uploadedCSVs[idx];
+                    final isSelected = state.selectedCSVIndex == idx;
+                    return InkWell(
+                      onTap: () => state.selectCSVFile(idx),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected ? AppColors.successBg : AppColors.bg2,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.success
+                                : AppColors.border0,
+                          ),
+                        ),
+                        child: Text(
+                          csv['name']!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isSelected
+                                ? AppColors.success
+                                : AppColors.textMuted,
+                            fontFamily: 'Inter',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            _buildImportRow(
+              icon: Icons.folder_open_rounded,
+              label: 'Thư mục bài thi',
+              typeLabel: 'FOLDER',
+              color: AppColors.warning,
+              fileName: latestFolderName,
+              onPick: () async => _pickFile(context, 'folder'),
+            ),
+            if (state.uploadedSubmissionFolders.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 40, bottom: 4),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: state.uploadedSubmissionFolders.map((folder) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: AppColors.warning.withOpacity(0.4),
+                        ),
+                      ),
+                      child: Text(
+                        folder['name'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.warning,
+                          fontFamily: 'Inter',
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1293,7 +1176,7 @@ class _SetupScreenState extends State<SetupScreen> {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
                 fontFamily: 'Inter',
@@ -1309,7 +1192,7 @@ class _SetupScreenState extends State<SetupScreen> {
             child: Text(
               typeLabel,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: color,
                 fontFamily: 'Inter',
@@ -1331,9 +1214,9 @@ class _SetupScreenState extends State<SetupScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    hasFile ? fileName! : 'Chưa chọn file',
+                    fileName ?? 'Chưa chọn file',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: hasFile
                           ? AppColors.textSecondary
                           : AppColors.textMuted,
@@ -1354,7 +1237,7 @@ class _SetupScreenState extends State<SetupScreen> {
             ),
             label: Text(
               hasFile ? 'Đổi' : 'Import',
-              style: const TextStyle(fontFamily: 'Inter', fontSize: 11),
+              style: const TextStyle(fontFamily: 'Inter', fontSize: 12),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: color,
@@ -1378,9 +1261,12 @@ class _SetupScreenState extends State<SetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton.icon(
-          onPressed: state.students.isNotEmpty
-              ? () => state.proceedToGrading()
-              : null,
+          onPressed: () {
+            final error = state.proceedToGrading();
+            if (error != null) {
+              _showImportSnack(context, error);
+            }
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.accent,
             foregroundColor: Colors.white,
@@ -1388,14 +1274,26 @@ class _SetupScreenState extends State<SetupScreen> {
           ),
           icon: const Icon(Icons.play_arrow_rounded, size: 18),
           label: const Text('Bắt đầu chấm điểm',
-              style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14)),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: () => state.loadDemoData(),
-          icon: const Icon(Icons.science_outlined, size: 16),
-          label: const Text('Tải dữ liệu Demo',
-              style: TextStyle(fontFamily: 'Inter', fontSize: 12)),
+          onPressed: () async {
+            try {
+              final message = await state.loadDemoData();
+              if (!context.mounted) return;
+              _showImportSnack(context, message);
+            } catch (e) {
+              if (!context.mounted) return;
+              _showImportSnack(context, 'Lỗi khi nạp dữ liệu: $e');
+            }
+          },
+          icon: const Icon(Icons.refresh_rounded, size: 16),
+          label: const Text('Nạp lại từ file đã import',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
@@ -1419,8 +1317,8 @@ class _SetupScreenState extends State<SetupScreen> {
 
     switch (type) {
       case 'exam':
-        final picked = await SetupFileImportService.pickDocx(
-          dialogTitle: 'Chọn file đề thi (.docx)',
+        final picked = await SetupFileImportService.pickImage(
+          dialogTitle: 'Chọn ảnh đề thi (.png/.jpg)',
         );
         if (!context.mounted || picked == null) return;
         state.setExamFile(picked.path, picked.name);
@@ -1435,15 +1333,18 @@ class _SetupScreenState extends State<SetupScreen> {
         _showImportSnack(context, 'Đã import barem: ${picked.name}');
         break;
       case 'csv':
-        final picked = await SetupFileImportService.pickCsv();
-        if (!context.mounted || picked == null) return;
-        state.setCSVFile(picked.path, picked.name);
-        _showImportSnack(context, 'Đã import danh sách: ${picked.name}');
+        final pickedFiles = await SetupFileImportService.pickStudentListFiles();
+        if (!context.mounted || pickedFiles.isEmpty) return;
+        await state.addCSVFiles(pickedFiles);
+        if (!context.mounted) return;
+        _showImportSnack(context,
+            'Đã import ${pickedFiles.length} file danh sách sinh viên');
         break;
       case 'folder':
         final path = await SetupFileImportService.pickSubmissionFolder();
         if (!context.mounted || path == null || path.isEmpty) return;
-        state.setSubmissionFolder(path);
+        await state.addSubmissionFolder(path);
+        if (!context.mounted) return;
         final folderName = path.split(RegExp(r'[/\\]')).last;
         _showImportSnack(context, 'Đã chọn thư mục: $folderName');
         break;
@@ -1600,8 +1501,7 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
   @override
   Widget build(BuildContext context) {
     final status = widget.session['status'] ?? 'pending';
-    final progress =
-        (widget.session['progress'] as num?)?.toDouble() ?? 0.0;
+    final progress = (widget.session['progress'] as num?)?.toDouble() ?? 0.0;
     final totalSub = widget.session['totalSubmissions'] ?? 0;
     final examCode = widget.session['examCode'] ?? '';
     final type = widget.session['type'] ?? '';
@@ -1824,53 +1724,6 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
-class _OverviewLine extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  const _OverviewLine({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: color,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _LegendDot extends StatelessWidget {
   final Color color;
   final String label;
@@ -1890,7 +1743,7 @@ class _LegendDot extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 10,
+            fontSize: 11,
             color: AppColors.textMuted,
             fontFamily: 'Inter',
           ),
@@ -1966,7 +1819,7 @@ class _StudentPreviewRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 28,
+            width: 32,
             child: Text(
               '${index + 1}',
               style: const TextStyle(
@@ -1977,10 +1830,11 @@ class _StudentPreviewRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Row(
               children: [
-                Icon(Icons.person_outline, size: 14, color: AppColors.accent.withOpacity(0.7)),
+                Icon(Icons.person_outline,
+                    size: 14, color: AppColors.accent.withOpacity(0.7)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -1998,7 +1852,7 @@ class _StudentPreviewRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Text(
               hasName ? student.name! : '—',
               style: TextStyle(
@@ -2012,30 +1866,11 @@ class _StudentPreviewRow extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Row(
-              children: [
-                const Icon(Icons.badge_outlined, size: 12, color: AppColors.textMuted),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    student.marker ?? '—',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontFamily: 'Inter',
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 76,
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(6),
@@ -2053,8 +1888,8 @@ class _StudentPreviewRow extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 52,
+          Expanded(
+            flex: 1,
             child: Text(
               score != null ? score.toStringAsFixed(1) : '—',
               textAlign: TextAlign.end,

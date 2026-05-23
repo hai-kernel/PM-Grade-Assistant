@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
 import '../models/app_models.dart';
 import '../services/grading_csv_export_service.dart';
 import '../services/grading_storage_service.dart';
 import '../services/grading_result_serializer.dart';
+import '../services/setup_import_storage_service.dart';
+import '../services/setup_real_data_service.dart';
 
 enum AppScreen { login, setup, grading }
 
@@ -16,8 +20,15 @@ class AppStateProvider extends ChangeNotifier {
 
   // Track multiple uploaded CSV student lists
   List<Map<String, String>> _uploadedCSVs = [];
+  List<Map<String, String>> _uploadedSubmissionFolders = [];
   int _selectedCSVIndex = -1;
   final GradingStorageService _gradingStorage = GradingStorageService();
+  final SetupImportStorageService _setupImportStorage =
+      SetupImportStorageService();
+
+  AppStateProvider() {
+    _restoreSetupImportsFromLocalDb();
+  }
 
   // ─── Getters ────────────────────────────────────────────────
   AppScreen get currentScreen => _currentScreen;
@@ -27,6 +38,8 @@ class AppStateProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get currentSessionName => _currentSessionName;
   List<Map<String, String>> get uploadedCSVs => _uploadedCSVs;
+  List<Map<String, String>> get uploadedSubmissionFolders =>
+      _uploadedSubmissionFolders;
   int get selectedCSVIndex => _selectedCSVIndex;
 
   String get sessionStorageId =>
@@ -49,6 +62,7 @@ class AppStateProvider extends ChangeNotifier {
       students.where((s) => s.status == GradingStatus.ungraded).length;
   int get inProgressCount =>
       students.where((s) => s.status == GradingStatus.inProgress).length;
+
   /// Chưa chấm xong (chưa chấm + đang chấm).
   int get pendingGradeCount => ungradedCount + inProgressCount;
   int get passCount => students
@@ -104,161 +118,84 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCSVFile(String path, String name) {
-    final Map<String, String> newCsv = {'path': path, 'name': name};
-    final existsIdx = _uploadedCSVs.indexWhere((c) => c['name'] == name);
-    if (existsIdx == -1) {
-      _uploadedCSVs.add(newCsv);
-      _selectedCSVIndex = _uploadedCSVs.length - 1;
-    } else {
-      _selectedCSVIndex = existsIdx;
-    }
+  Future<void> addCSVFiles(List<({String path, String name})> files) async {
+    if (files.isEmpty) return;
 
-    final int index = _selectedCSVIndex;
-    final List<StudentSubmission> list = MockData.getSampleStudents().map((s) {
-      return StudentSubmission(
-        alias: '${s.alias}_L${index + 1}',
-        name: '${s.name} (List ${index + 1})',
-        marker: s.marker,
-        filePath: s.filePath,
-        status: s.status,
-        publicComment: s.publicComment,
-        privateNote: s.privateNote,
-        finalScore: s.finalScore,
-        finalScaleScore: s.finalScaleScore,
-        isExported: s.isExported,
-      );
-    }).toList();
-
-    // Check duplicates by alias
-    final List<StudentSubmission> currentStudents = List.from(_setupData.students);
-    for (final student in list) {
-      final isDuplicate = currentStudents.any((s) => s.alias == student.alias);
-      if (!isDuplicate) {
-        currentStudents.add(student);
+    for (final file in files) {
+      final existsIdx =
+          _uploadedCSVs.indexWhere((csv) => csv['path'] == file.path);
+      if (existsIdx == -1) {
+        _uploadedCSVs.add({'path': file.path, 'name': file.name});
+        _selectedCSVIndex = _uploadedCSVs.length - 1;
+      } else {
+        _selectedCSVIndex = existsIdx;
       }
+      await _setupImportStorage.saveCsvImport(path: file.path, name: file.name);
     }
+    await _refreshStudentsFromImportedSources();
+  }
 
-    _setupData = SetupData(
-      examFilePath: _setupData.examFilePath,
-      examFileName: _setupData.examFileName,
-      examContent: _setupData.examContent,
-      gradingGuidePath: _setupData.gradingGuidePath,
-      gradingGuideFileName: _setupData.gradingGuideFileName,
-      csvFilePath: path,
-      csvFileName: name,
-      submissionFolderPath: _setupData.submissionFolderPath,
-      parsedCriteria: _setupData.parsedCriteria,
-      students: currentStudents,
-    );
-    notifyListeners();
+  Future<void> setCSVFile(String path, String name) async {
+    await addCSVFiles([(path: path, name: name)]);
   }
 
   void selectCSVFile(int index) {
     if (index < 0 || index >= _uploadedCSVs.length) return;
     _selectedCSVIndex = index;
-    notifyListeners();
-  }
-
-  void setSubmissionFolder(String path) {
-    final segments = path.split(RegExp(r'[/\\]'));
-    final folderName = segments.isNotEmpty ? segments.last : 'folder';
-
-    final List<StudentSubmission> list = MockData.getSampleStudents().map((s) {
-      final newAlias = '${s.alias}_$folderName';
-      return StudentSubmission(
-        alias: newAlias,
-        name: '${s.name} ($folderName)',
-        marker: s.marker,
-        filePath: '$path/$newAlias.txt',
-        status: s.status,
-        publicComment: s.publicComment,
-        privateNote: s.privateNote,
-        finalScore: s.finalScore,
-        finalScaleScore: s.finalScaleScore,
-        isExported: s.isExported,
-      );
-    }).toList();
-
-    // Check duplicates by alias
-    final List<StudentSubmission> currentStudents = List.from(_setupData.students);
-    for (final student in list) {
-      final isDuplicate = currentStudents.any((s) => s.alias == student.alias);
-      if (!isDuplicate) {
-        currentStudents.add(student);
-      }
-    }
-
+    final selected = _uploadedCSVs[index];
     _setupData = SetupData(
       examFilePath: _setupData.examFilePath,
       examFileName: _setupData.examFileName,
       examContent: _setupData.examContent,
       gradingGuidePath: _setupData.gradingGuidePath,
       gradingGuideFileName: _setupData.gradingGuideFileName,
-      csvFilePath: _setupData.csvFilePath,
-      csvFileName: _setupData.csvFileName,
-      submissionFolderPath: path,
+      csvFilePath: selected['path'],
+      csvFileName: selected['name'],
+      submissionFolderPath: _setupData.submissionFolderPath,
       parsedCriteria: _setupData.parsedCriteria,
-      students: currentStudents,
+      students: _setupData.students,
     );
     notifyListeners();
   }
 
-  // Load demo data for UI showcase
-  void loadDemoData() {
-    final criteria = MockData.getSampleCriteria();
-    final students = MockData.getSampleStudents();
-
-    _uploadedCSVs = [
-      {
-        'path': '/demo/PMG201c_SP26_2ndFE_PE_Mark_Input.csv',
-        'name': 'PMG201c_SP26_2ndFE_PE_Mark_Input.csv'
-      }
-    ];
-    _selectedCSVIndex = 0;
-
-    _setupData = SetupData(
-      examFilePath: '/demo/PMG201c-Exam.docx',
-      examFileName: 'PMG201c-Exam.docx',
-      gradingGuidePath: '/demo/PMG201c-GradingGuide.docx',
-      gradingGuideFileName: 'PMG201c-GradingGuide.docx',
-      examContent: '''
-ĐỀ THI MÔN PROJECT MANAGEMENT
-Mã học phần: PMG201c
-
-PHẦN 1: TỔNG QUAN DỰ ÁN (20 điểm)
-Yêu cầu sinh viên tạo một tài liệu mô tả tóm tắt về dự án.
-- 1.1 Trình bày tổng quan về dự án.
-- 1.2 Xác định mục tiêu của dự án.
-- 1.3 Lập danh sách các stakeholder.
-
-PHẦN 2: WORK BREAKDOWN STRUCTURE (20 điểm)
-Phân rã dự án thành các gói công việc chi tiết.
-- 2.1 Cấu trúc WBS (tối thiểu 3 mức).
-- 2.2 Từ điển WBS (WBS Dictionary).
-
-PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
-- 3.1 Ước lượng chi phí (Cost Estimate).
-- 3.2 Ước lượng thời gian (Time Estimate).
-- 3.3 Sơ đồ Gantt (Gantt Chart).
-''',
-      csvFilePath: '/demo/PMG201c_SP26_2ndFE_PE_Mark_Input.csv',
-      csvFileName: 'PMG201c_SP26_2ndFE_PE_Mark_Input.csv',
-      submissionFolderPath: '/demo/submissions',
-      parsedCriteria: criteria,
-      students: students,
-    );
-
-    notifyListeners();
-  }
-
-  void proceedToGrading() {
-    if (_setupData.students.isEmpty) {
-      loadDemoData();
+  Future<void> addSubmissionFolder(String path) async {
+    final segments = path.split(RegExp(r'[/\\]'));
+    final folderName = segments.isNotEmpty ? segments.last : 'folder';
+    final exists =
+        _uploadedSubmissionFolders.any((folder) => folder['path'] == path);
+    if (!exists) {
+      _uploadedSubmissionFolders.add({'path': path, 'name': folderName});
     }
+
+    await _setupImportStorage.saveSubmissionFolderImport(
+      path: path,
+      name: folderName,
+    );
+    await _refreshStudentsFromImportedSources();
+  }
+
+  Future<void> setSubmissionFolder(String path) async {
+    await addSubmissionFolder(path);
+  }
+
+  // Reload from current imported CSV/folder sources.
+  Future<String> loadDemoData() async {
+    final count = await _refreshStudentsFromImportedSources();
+    return 'Đã nạp lại $count sinh viên từ dữ liệu đã import.';
+  }
+
+  String? proceedToGrading() {
+    if (_setupData.students.isEmpty || _setupData.parsedCriteria.isEmpty) {
+      _errorMessage =
+          'Thiếu dữ liệu thật để chấm. Hãy import danh sách sinh viên, thư mục bài thi và barem.';
+      notifyListeners();
+      return _errorMessage;
+    }
+    _errorMessage = null;
     _currentScreen = AppScreen.grading;
     _restoreAllSavedGrades();
     notifyListeners();
+    return null;
   }
 
   Future<void> _restoreAllSavedGrades() async {
@@ -287,12 +224,14 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
 
     if (saved != null) {
       GradingResultSerializer.applyJsonToStudent(student, saved);
-      if (student.fileContent.isEmpty) {
-        student.fileContent = MockData.sampleSubmission;
+      if (student.fileContent.isEmpty && student.filePath.isNotEmpty) {
+        student.fileContent = await _readSubmissionText(student.filePath);
       }
     } else if (student.criteria.isEmpty) {
       student.criteria = _deepCopyCriteria(_setupData.parsedCriteria);
-      student.fileContent = MockData.sampleSubmission;
+      if (student.filePath.isNotEmpty) {
+        student.fileContent = await _readSubmissionText(student.filePath);
+      }
       if (student.status == GradingStatus.ungraded) {
         student.status = GradingStatus.inProgress;
       }
@@ -328,10 +267,12 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
 
   void updateCriterionGeneralComment(String criterionId, String? comment) {
     if (_selectedStudent == null) return;
-    
-    final idx = _selectedStudent!.criteria.indexWhere((c) => c.id == criterionId);
+
+    final idx =
+        _selectedStudent!.criteria.indexWhere((c) => c.id == criterionId);
     if (idx != -1) {
-      _selectedStudent!.criteria[idx] = _selectedStudent!.criteria[idx].copyWith(
+      _selectedStudent!.criteria[idx] =
+          _selectedStudent!.criteria[idx].copyWith(
         generalComment: comment,
       );
       notifyListeners();
@@ -424,21 +365,112 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
     );
   }
 
-  void _parseCSV(String path) {
-    // In real implementation: parse .csv to get student list
-    final students = MockData.getSampleStudents();
+  Future<void> _restoreSetupImportsFromLocalDb() async {
+    final csvs = await _setupImportStorage.loadCsvImports();
+    final folders = await _setupImportStorage.loadSubmissionFolderImports();
+    if (csvs.isEmpty && folders.isEmpty) return;
+
+    _uploadedCSVs = csvs;
+    _uploadedSubmissionFolders = folders;
+    _selectedCSVIndex = _uploadedCSVs.isEmpty ? -1 : _uploadedCSVs.length - 1;
+
+    final selectedCsv =
+        _selectedCSVIndex >= 0 ? _uploadedCSVs[_selectedCSVIndex] : null;
+    final lastFolder = _uploadedSubmissionFolders.isEmpty
+        ? null
+        : _uploadedSubmissionFolders.last;
+
     _setupData = SetupData(
       examFilePath: _setupData.examFilePath,
       examFileName: _setupData.examFileName,
       examContent: _setupData.examContent,
       gradingGuidePath: _setupData.gradingGuidePath,
       gradingGuideFileName: _setupData.gradingGuideFileName,
-      csvFilePath: _setupData.csvFilePath,
-      csvFileName: _setupData.csvFileName,
-      submissionFolderPath: _setupData.submissionFolderPath,
+      csvFilePath: selectedCsv?['path'],
+      csvFileName: selectedCsv?['name'],
+      submissionFolderPath: lastFolder?['path'],
       parsedCriteria: _setupData.parsedCriteria,
-      students: students,
+      students: const [],
     );
+
+    await _refreshStudentsFromImportedSources();
+  }
+
+  Future<int> _refreshStudentsFromImportedSources() async {
+    final csvPaths =
+        _uploadedCSVs.map((csv) => csv['path']).whereType<String>().toList();
+    final folderPaths = _uploadedSubmissionFolders
+        .map((folder) => folder['path'])
+        .whereType<String>()
+        .toList();
+
+    final importedStudents =
+        await SetupRealDataService.readStudentsFromCsvFiles(csvPaths);
+    final indexedFiles =
+        await SetupRealDataService.indexSubmissionFiles(folderPaths);
+    final rebuilt = SetupRealDataService.buildStudents(
+      records: importedStudents,
+      indexedSubmissionPaths: indexedFiles,
+    );
+
+    final prevByAlias = <String, StudentSubmission>{
+      for (final student in _setupData.students) student.alias: student,
+    };
+    final merged = rebuilt.map((student) {
+      final prev = prevByAlias[student.alias];
+      if (prev == null) return student;
+      return StudentSubmission(
+        alias: student.alias,
+        name: student.name ?? prev.name,
+        marker: student.marker ?? prev.marker,
+        filePath:
+            student.filePath.isNotEmpty ? student.filePath : prev.filePath,
+        fileContent: prev.fileContent,
+        status: prev.status,
+        criteria: prev.criteria,
+        publicComment: prev.publicComment,
+        privateNote: prev.privateNote,
+        finalScore: prev.finalScore,
+        finalScaleScore: prev.finalScaleScore,
+        isExported: prev.isExported,
+      );
+    }).toList();
+
+    final selectedCsv =
+        _selectedCSVIndex >= 0 && _selectedCSVIndex < _uploadedCSVs.length
+            ? _uploadedCSVs[_selectedCSVIndex]
+            : null;
+    final latestFolder = _uploadedSubmissionFolders.isNotEmpty
+        ? _uploadedSubmissionFolders.last
+        : null;
+
+    _setupData = SetupData(
+      examFilePath: _setupData.examFilePath,
+      examFileName: _setupData.examFileName,
+      examContent: _setupData.examContent,
+      gradingGuidePath: _setupData.gradingGuidePath,
+      gradingGuideFileName: _setupData.gradingGuideFileName,
+      csvFilePath: selectedCsv?['path'],
+      csvFileName: selectedCsv?['name'],
+      submissionFolderPath: latestFolder?['path'],
+      parsedCriteria: _setupData.parsedCriteria,
+      students: merged,
+    );
+
+    notifyListeners();
+    return merged.length;
+  }
+
+  Future<String> _readSubmissionText(String filePath) async {
+    if (filePath.isEmpty) return '';
+    final file = File(filePath);
+    if (!await file.exists()) return '';
+    try {
+      return await file.readAsString();
+    } catch (_) {
+      final bytes = await file.readAsBytes();
+      return utf8.decode(bytes, allowMalformed: true);
+    }
   }
 
   List<GradingCriterion> _deepCopyCriteria(List<GradingCriterion> src) {
@@ -465,7 +497,9 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
     _setupData = SetupData();
     _selectedStudent = null;
     _uploadedCSVs = [];
+    _uploadedSubmissionFolders = [];
     _selectedCSVIndex = -1;
+    _setupImportStorage.clearAll();
     notifyListeners();
   }
 

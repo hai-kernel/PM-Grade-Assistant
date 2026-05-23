@@ -13,6 +13,8 @@ dependencies:
   file_picker: ^8.1.2
   # CSV parsing
   csv: ^6.0.0
+  # Excel parsing (.xlsx)
+  excel: ^4.0.6
   # DOCX parsing (Pure Dart)
   archive: ^3.6.1
   xml: ^6.3.0
@@ -31,6 +33,9 @@ dependencies:
   # File system
   path_provider: ^2.1.4
   path: ^1.9.0
+  # SQLite local storage (drift compatible)
+  sqlite3: ^2.4.0
+  sqlite3_flutter_libs: ^0.5.26
 
 dev_dependencies:
   flutter_test:
