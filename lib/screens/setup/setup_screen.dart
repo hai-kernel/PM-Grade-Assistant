@@ -114,74 +114,159 @@ class _SetupScreenState extends State<SetupScreen> {
             child: _selectedSession != null
                 ? _buildSessionDetailView(context, state)
                 : Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 1000),
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
                         children: [
+                          // ─── Hero Banner ───
                           Container(
-                            width: 80,
-                            height: 80,
+                            padding: const EdgeInsets.all(40),
                             decoration: BoxDecoration(
-                              color: AppColors.accent.withOpacity(0.08),
-                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [AppColors.accent, AppColors.purple],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accent.withOpacity(0.2),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                            child: const Icon(Icons.history_edu_rounded,
-                                size: 40, color: AppColors.accent),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Hệ thống quản lý & Chấm điểm Project Management',
-                            style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                fontFamily: 'Inter'),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Chọn một đợt thi bên dưới hoặc tạo phiên chấm mới để bắt đầu.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                                fontFamily: 'Inter'),
-                          ),
-                          const SizedBox(height: 32),
-                          SizedBox(
-                            width: 850,
-                            child: _buildSessionSelector(compact: false),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Text(
+                                          '🎉 Chào mừng trở lại!',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'Inter',
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Hệ thống quản lý & Chấm điểm\nProject Management',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w800,
+                                          height: 1.25,
+                                          fontFamily: 'Inter',
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Chọn một đợt thi bên dưới hoặc tạo phiên chấm mới để bắt đầu quá trình chấm điểm tự động, hỗ trợ phân tích AI và xuất báo cáo chuẩn xác.',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 14,
+                                          height: 1.5,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      ElevatedButton.icon(
+                                        onPressed: _onCreateSession,
+                                        icon: const Icon(Icons.add_rounded, size: 18),
+                                        label: const Text('Tạo phiên chấm mới', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: AppColors.accent,
+                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 40),
+                                Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Icon(Icons.auto_awesome_mosaic_rounded, size: 70, color: Colors.white.withOpacity(0.9)),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 40),
-                          Wrap(
-                            spacing: 24,
-                            runSpacing: 24,
-                            alignment: WrapAlignment.center,
+                          
+                          // ─── Features ───
+                          Row(
                             children: [
-                              _buildFeatureInfoCard(
-                                icon: Icons.psychology_outlined,
-                                color: AppColors.purple,
-                                title: 'AI Assistant Grading',
-                                desc:
-                                    'Chấm bài thi Project Management thông minh, phân tích chi tiết lỗi logic và đề xuất điểm chuẩn barem.',
+                              Expanded(
+                                child: _buildFeatureInfoCard(
+                                  icon: Icons.psychology_outlined,
+                                  color: AppColors.purple,
+                                  title: 'AI Assistant Grading',
+                                  desc: 'Chấm thông minh, phân tích lỗi logic chi tiết.',
+                                ),
                               ),
-                              _buildFeatureInfoCard(
-                                icon: Icons.table_view_outlined,
-                                color: AppColors.success,
-                                title: 'Báo cáo điểm chuẩn Excel',
-                                desc:
-                                    'Xuất kết quả chấm điểm kép (Double-Header) chuẩn chỉ, tích hợp nhận xét chi tiết của sinh viên.',
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: _buildFeatureInfoCard(
+                                  icon: Icons.table_view_outlined,
+                                  color: AppColors.success,
+                                  title: 'Báo cáo Excel',
+                                  desc: 'Xuất kết quả Double-Header chuẩn chỉ, kèm nhận xét.',
+                                ),
                               ),
-                              _buildFeatureInfoCard(
-                                icon: Icons.account_tree_outlined,
-                                color: AppColors.accent,
-                                title: 'Quản lý lịch sử chấm',
-                                desc:
-                                    'Quản lý các phiên chấm thi (sessions) trực quan giúp dễ dàng tra cứu, kiểm tra lại quá trình chấm điểm.',
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: _buildFeatureInfoCard(
+                                  icon: Icons.account_tree_outlined,
+                                  color: AppColors.accent,
+                                  title: 'Quản lý lịch sử',
+                                  desc: 'Theo dõi tiến độ, tra cứu lịch sử dễ dàng.',
+                                ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 40),
+
+                          // ─── Session Selector ───
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: AppColors.bg1,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: _buildSessionSelector(compact: false),
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -835,11 +920,10 @@ class _SetupScreenState extends State<SetupScreen> {
     required String desc,
   }) {
     return Container(
-      width: 250,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border0),
         boxShadow: [
           BoxShadow(
@@ -853,18 +937,18 @@ class _SetupScreenState extends State<SetupScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 16),
           Text(
             title,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
               fontFamily: 'Inter',
@@ -874,7 +958,7 @@ class _SetupScreenState extends State<SetupScreen> {
           Text(
             desc,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: AppColors.textSecondary,
               fontFamily: 'Inter',
               height: 1.5,
