@@ -295,18 +295,26 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
           
           // Save / Finalize Button
           ElevatedButton.icon(
-            onPressed: () {
-              state.finalizeGrading();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Đã lưu nhận xét và hoàn tất chấm điểm thành công!',
-                    style: TextStyle(fontFamily: 'Inter'),
-                  ),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
+            onPressed: widget.student.status == GradingStatus.graded
+                ? null
+                : () async {
+                    final path = await state.finalizeAndSaveGrading();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          path != null
+                              ? 'Đã lưu bài ${widget.student.alias}. Xuất CSV khi chấm xong tất cả.'
+                              : 'Không lưu được bài ${widget.student.alias}.',
+                          style: const TextStyle(fontFamily: 'Inter'),
+                        ),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    final next = state.nextUngradedStudent;
+                    if (next != null) state.selectStudent(next);
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -315,9 +323,16 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
               ),
               elevation: 0,
             ),
-            icon: const Icon(Icons.check_circle_outline, size: 18),
-            label: const Text(
-              'Lưu & Hoàn tất chấm điểm',
+            icon: Icon(
+              widget.student.status == GradingStatus.graded
+                  ? Icons.check_circle_rounded
+                  : Icons.save_rounded,
+              size: 18,
+            ),
+            label: Text(
+              widget.student.status == GradingStatus.graded
+                  ? 'Đã lưu bài này'
+                  : 'Lưu bài này',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.bold,

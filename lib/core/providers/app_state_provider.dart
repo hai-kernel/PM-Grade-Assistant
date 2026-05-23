@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/app_models.dart';
+import '../services/grading_csv_export_service.dart';
+import '../services/grading_storage_service.dart';
+import '../services/grading_result_serializer.dart';
 
 enum AppScreen { login, setup, grading }
 
@@ -14,6 +17,7 @@ class AppStateProvider extends ChangeNotifier {
   // Track multiple uploaded CSV student lists
   List<Map<String, String>> _uploadedCSVs = [];
   int _selectedCSVIndex = -1;
+  final GradingStorageService _gradingStorage = GradingStorageService();
 
   // ─── Getters ────────────────────────────────────────────────
   AppScreen get currentScreen => _currentScreen;
@@ -25,6 +29,9 @@ class AppStateProvider extends ChangeNotifier {
   List<Map<String, String>> get uploadedCSVs => _uploadedCSVs;
   int get selectedCSVIndex => _selectedCSVIndex;
 
+  String get sessionStorageId =>
+      GradingStorageService.sessionIdFromName(_currentSessionName);
+
   void setCurrentSessionName(String? name) {
     _currentSessionName = name;
     notifyListeners();
@@ -33,12 +40,29 @@ class AppStateProvider extends ChangeNotifier {
   List<StudentSubmission> get students => _setupData.students;
   List<GradingCriterion> get criteria => _setupData.parsedCriteria;
 
+  static const double passScaleThreshold = 5.0;
+
+  int get assignedCount => students.length;
   int get gradedCount =>
       students.where((s) => s.status == GradingStatus.graded).length;
   int get ungradedCount =>
       students.where((s) => s.status == GradingStatus.ungraded).length;
   int get inProgressCount =>
       students.where((s) => s.status == GradingStatus.inProgress).length;
+  /// Chưa chấm xong (chưa chấm + đang chấm).
+  int get pendingGradeCount => ungradedCount + inProgressCount;
+  int get passCount => students
+      .where((s) =>
+          s.status == GradingStatus.graded &&
+          s.finalScaleScore != null &&
+          s.finalScaleScore! >= passScaleThreshold)
+      .length;
+  int get failCount => students
+      .where((s) =>
+          s.status == GradingStatus.graded &&
+          s.finalScaleScore != null &&
+          s.finalScaleScore! < passScaleThreshold)
+      .length;
 
   // ─── Navigation ─────────────────────────────────────────────
   void navigateTo(AppScreen screen) {
@@ -233,15 +257,40 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
       loadDemoData();
     }
     _currentScreen = AppScreen.grading;
+    _restoreAllSavedGrades();
+    notifyListeners();
+  }
+
+  Future<void> _restoreAllSavedGrades() async {
+    final sessionId = sessionStorageId;
+    for (final student in _setupData.students) {
+      final saved =
+          await _gradingStorage.loadStudentResult(sessionId, student.alias);
+      if (saved != null) {
+        GradingResultSerializer.applyJsonToStudent(student, saved);
+      }
+    }
     notifyListeners();
   }
 
   // ─── Grading Actions ────────────────────────────────────────
   void selectStudent(StudentSubmission student) {
     _selectedStudent = student;
+    _hydrateStudentFromDisk(student);
+  }
 
-    // Load criteria for this student if not already loaded
-    if (student.criteria.isEmpty) {
+  Future<void> _hydrateStudentFromDisk(StudentSubmission student) async {
+    final saved = await _gradingStorage.loadStudentResult(
+      sessionStorageId,
+      student.alias,
+    );
+
+    if (saved != null) {
+      GradingResultSerializer.applyJsonToStudent(student, saved);
+      if (student.fileContent.isEmpty) {
+        student.fileContent = MockData.sampleSubmission;
+      }
+    } else if (student.criteria.isEmpty) {
       student.criteria = _deepCopyCriteria(_setupData.parsedCriteria);
       student.fileContent = MockData.sampleSubmission;
       if (student.status == GradingStatus.ungraded) {
@@ -296,18 +345,55 @@ PHẦN 3: ESTIMATE & SCHEDULE (30 điểm)
     notifyListeners();
   }
 
-  void finalizeGrading() {
-    if (_selectedStudent == null) return;
+  /// Xác nhận điểm và lưu bài này ra disk (JSON trong thư mục phiên).
+  Future<String?> finalizeAndSaveGrading() async {
+    if (_selectedStudent == null) return null;
 
-    final total = _selectedStudent!.computedTotal;
-    final maxTotal = _selectedStudent!.maxTotal;
+    final student = _selectedStudent!;
+    final total = student.computedTotal;
+    final maxTotal = student.maxTotal;
 
-    _selectedStudent!.finalScore = total;
-    _selectedStudent!.finalScaleScore =
-        maxTotal > 0 ? (total / maxTotal) * 10 : 0;
-    _selectedStudent!.status = GradingStatus.graded;
+    student.finalScore = total;
+    student.finalScaleScore = maxTotal > 0 ? (total / maxTotal) * 10 : 0;
+    student.status = GradingStatus.graded;
+
+    final path = await _gradingStorage.saveStudentResult(
+      sessionStorageId,
+      student,
+    );
 
     notifyListeners();
+    return path;
+  }
+
+  /// Xuất toàn bộ điểm ra file CSV (cuối phiên).
+  Future<String?> exportAllGradesToCsv() async {
+    final csv = GradingCsvExportService.buildCsvContent(
+      students: students,
+      criteriaTemplate: _setupData.parsedCriteria,
+    );
+
+    final baseName = _setupData.csvFileName ?? 'Mark_Output';
+    final suggested = baseName.endsWith('.csv')
+        ? baseName.replaceFirst('.csv', '_Output.csv')
+        : '${baseName}_Output.csv';
+
+    return GradingCsvExportService.saveCsvWithPicker(
+      csvContent: csv,
+      suggestedFileName: suggested,
+    );
+  }
+
+  StudentSubmission? get nextUngradedStudent {
+    if (_selectedStudent == null) return null;
+    final idx = students.indexWhere((s) => s.alias == _selectedStudent!.alias);
+    for (var i = idx + 1; i < students.length; i++) {
+      if (students[i].status != GradingStatus.graded) return students[i];
+    }
+    for (var i = 0; i < idx; i++) {
+      if (students[i].status != GradingStatus.graded) return students[i];
+    }
+    return null;
   }
 
   void _updateStudentStatus() {

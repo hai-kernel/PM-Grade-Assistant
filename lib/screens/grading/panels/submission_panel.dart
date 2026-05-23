@@ -484,7 +484,7 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
         ),
         icon: Icon(isGraded ? Icons.check_circle_rounded : Icons.save_alt_rounded, size: 16),
         label: Text(
-          isGraded ? 'Đã lưu điểm' : 'Xác nhận điểm cuối cùng',
+          isGraded ? 'Đã lưu bài này' : 'Lưu bài này',
           style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
         ),
       ),
@@ -629,12 +629,29 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(ctx);
-                        state.finalizeGrading();
+                        final path =
+                            await state.finalizeAndSaveGrading();
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              path != null
+                                  ? 'Đã lưu bài ${student.alias}. Xuất CSV khi chấm xong tất cả.'
+                                  : 'Không lưu được bài ${student.alias}.',
+                              style: const TextStyle(fontFamily: 'Inter'),
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        final next = state.nextUngradedStudent;
+                        if (next != null) {
+                          state.selectStudent(next);
+                        }
                       },
-                      icon: const Icon(Icons.check_circle_outline, size: 18),
-                      label: const Text('Xác nhận & Hoàn tất'),
+                      icon: const Icon(Icons.save_rounded, size: 18),
+                      label: const Text('Lưu bài này'),
                     ),
                   ],
                 ),

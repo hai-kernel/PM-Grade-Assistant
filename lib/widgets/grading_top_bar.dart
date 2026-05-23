@@ -5,7 +5,14 @@ import '../core/providers/app_state_provider.dart';
 import '../core/models/app_models.dart';
 
 class GradingTopBar extends StatelessWidget {
-  const GradingTopBar({super.key});
+  final bool studentPanelVisible;
+  final VoidCallback? onToggleStudentPanel;
+
+  const GradingTopBar({
+    super.key,
+    this.studentPanelVisible = true,
+    this.onToggleStudentPanel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +28,23 @@ class GradingTopBar extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 12),
+          if (onToggleStudentPanel != null) ...[
+            Tooltip(
+              message: studentPanelVisible
+                  ? 'Ẩn danh sách sinh viên'
+                  : 'Hiện danh sách sinh viên',
+              child: _TopBarButton(
+                icon: studentPanelVisible
+                    ? Icons.vertical_split_outlined
+                    : Icons.people_alt_outlined,
+                label: studentPanelVisible ? 'Ẩn DS SV' : 'DS SV',
+                onTap: onToggleStudentPanel,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(width: 1, height: 20, color: AppColors.border0),
+            const SizedBox(width: 8),
+          ],
           // Back to setup
           _TopBarButton(
             icon: Icons.arrow_back,
@@ -78,7 +102,7 @@ class GradingTopBar extends StatelessWidget {
           // Export all
           _TopBarButton(
             icon: Icons.download_rounded,
-            label: 'Export All CSV',
+            label: 'Xuất CSV',
             onTap: () => _showExportAllDialog(context, state),
             accent: true,
           ),
@@ -149,7 +173,7 @@ class GradingTopBar extends StatelessWidget {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Cảnh báo: Bạn chưa chấm xong tất cả các bài. Các bài chưa chấm sẽ có điểm trống (hoặc 0) trong file export.',
+                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file CSV.',
                               style: TextStyle(color: AppColors.warning, fontFamily: 'Inter', fontSize: 12, height: 1.4),
                             ),
                           ),
@@ -174,9 +198,22 @@ class GradingTopBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xuất toàn bộ điểm thành công!', style: TextStyle(fontFamily: 'Inter'))));
+                      final path = await state.exportAllGradesToCsv();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            path != null
+                                ? 'Đã xuất CSV: $path'
+                                : 'Hủy xuất file hoặc không lưu được.',
+                            style: const TextStyle(fontFamily: 'Inter'),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,

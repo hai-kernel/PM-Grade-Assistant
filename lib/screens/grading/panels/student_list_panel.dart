@@ -5,7 +5,9 @@ import '../../../core/providers/app_state_provider.dart';
 import '../../../core/models/app_models.dart';
 
 class StudentListPanel extends StatefulWidget {
-  const StudentListPanel({super.key});
+  final VoidCallback? onHidePanel;
+
+  const StudentListPanel({super.key, this.onHidePanel});
 
   @override
   State<StudentListPanel> createState() => _StudentListPanelState();
@@ -55,24 +57,55 @@ class _StudentListPanelState extends State<StudentListPanel> {
 
   Widget _buildHeader(AppStateProvider state) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.border0)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.people_alt_outlined, size: 15, color: AppColors.textSecondary),
+          if (widget.onHidePanel != null)
+            Tooltip(
+              message: 'Ẩn panel (kéo divider trái hoặc double-click)',
+              child: IconButton(
+                icon: const Icon(Icons.chevron_left_rounded,
+                    size: 18, color: AppColors.textMuted),
+                onPressed: widget.onHidePanel,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                splashRadius: 16,
+              ),
+            ),
+          const Icon(Icons.people_alt_outlined,
+              size: 15, color: AppColors.textSecondary),
           const SizedBox(width: 6),
-          const Text('Sinh viên', style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Inter',
-          )),
-          const Spacer(),
-          Text('${state.students.length}', style: const TextStyle(
-            color: AppColors.textMuted, fontSize: 11, fontFamily: 'Inter',
-          )),
+          const Expanded(
+            child: Text(
+              'Sinh viên',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${state.students.length}',
+              style: const TextStyle(
+                color: AppColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
         ],
       ),
     );

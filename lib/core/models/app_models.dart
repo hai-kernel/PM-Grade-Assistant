@@ -373,6 +373,7 @@ class MockData {
     return [
       StudentSubmission(
         alias: 'Alias_01',
+        name: 'Nguyễn Văn An',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_01.txt',
         status: GradingStatus.graded,
@@ -384,6 +385,7 @@ class MockData {
       ),
       StudentSubmission(
         alias: 'Alias_02',
+        name: 'Trần Thị Bình',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_02.txt',
         status: GradingStatus.inProgress,
@@ -392,12 +394,14 @@ class MockData {
       ),
       StudentSubmission(
         alias: 'Alias_03',
+        name: 'Lê Minh Cường',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_03.txt',
         status: GradingStatus.ungraded,
       ),
       StudentSubmission(
         alias: 'Alias_04',
+        name: 'Phạm Thu Dung',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_04.txt',
         status: GradingStatus.graded,
@@ -406,18 +410,21 @@ class MockData {
       ),
       StudentSubmission(
         alias: 'Alias_05',
+        name: 'Hoàng Văn Em',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_05.txt',
         status: GradingStatus.ungraded,
       ),
       StudentSubmission(
         alias: 'Alias_06',
+        name: 'Vũ Thị Phương',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_06.txt',
         status: GradingStatus.ungraded,
       ),
       StudentSubmission(
         alias: 'Alias_07',
+        name: 'Đặng Quốc Giang',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_07.txt',
         status: GradingStatus.graded,
@@ -426,6 +433,7 @@ class MockData {
       ),
       StudentSubmission(
         alias: 'Alias_08',
+        name: 'Bùi Thị Hà',
         marker: 'Teacher A',
         filePath: '/submissions/Alias_08.txt',
         status: GradingStatus.ungraded,
