@@ -20,7 +20,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppStateProvider>();
-    final students = state.students.where((s) {
+    final students = state.displayedStudents.where((s) {
       final matchSearch = _searchQuery.isEmpty ||
           s.alias.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           (s.name?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
@@ -96,7 +96,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '${state.students.length}',
+              '${state.displayedStudents.length}',
               style: const TextStyle(
                 color: AppColors.accent,
                 fontSize: 11,
@@ -143,7 +143,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
 
   Widget _buildFilterTabs(AppStateProvider state) {
     final tabs = [
-      ('all', 'Tất cả', state.students.length),
+      ('all', 'Tất cả', state.displayedStudents.length),
       ('ungraded', 'Chưa chấm', state.ungradedCount),
       ('inProgress', 'Đang chấm', state.inProgressCount),
       ('graded', 'Đã chấm', state.gradedCount),
@@ -184,7 +184,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
   }
 
   Widget _buildFooter(AppStateProvider state) {
-    final pct = state.students.isEmpty ? 0.0 : state.gradedCount / state.students.length;
+    final pct = state.displayedStudents.isEmpty ? 0.0 : state.gradedCount / state.displayedStudents.length;
     return Container(
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.border0)),
@@ -199,7 +199,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
               children: [
                 Row(
                   children: [
-                    Text('Tiến độ chấm: ${state.gradedCount}/${state.students.length}',
+                    Text('Tiến độ chấm: ${state.gradedCount}/${state.displayedStudents.length}',
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFamily: 'Inter')),
                     const Spacer(),
                     Text('${(pct * 100).toStringAsFixed(0)}%',

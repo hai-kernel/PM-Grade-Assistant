@@ -49,7 +49,7 @@ class _SetupScreenState extends State<SetupScreen> {
   Map<String, dynamic>? _selectedSession;
   String _studentSearch = '';
 
-  void _onSessionSelected(Map<String, dynamic> session) {
+  void _onSessionSelected(Map<String, dynamic> session) async {
     setState(() {
       _selectedSession = session;
     });
@@ -57,7 +57,13 @@ class _SetupScreenState extends State<SetupScreen> {
     state.setCurrentSessionName(
         '${session['subject']} / ${session['semester']} / ${session['examCode']}');
     if (session['status'] != 'pending') {
-      state.loadDemoData();
+      await state.loadDemoData();
+      if (mounted) {
+        final error = state.proceedToGrading();
+        if (error != null) {
+          _showImportSnack(context, error);
+        }
+      }
     } else {
       state.resetSetupData();
     }
@@ -103,11 +109,6 @@ class _SetupScreenState extends State<SetupScreen> {
       color: AppColors.bg0,
       child: Row(
         children: [
-          SetupSidebar(
-            onLogout: () => state.navigateTo(AppScreen.login),
-          ),
-          const VerticalDivider(
-              width: 1, thickness: 1, color: AppColors.border0),
           // ─── Main Content ───
           Expanded(
             child: _selectedSession != null
@@ -119,6 +120,78 @@ class _SetupScreenState extends State<SetupScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 40, vertical: 30),
                         children: [
+                          // ─── Header Profile & Logout ───
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [AppColors.accent, AppColors.purple],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Icon(Icons.school_rounded,
+                                        color: Colors.white, size: 16),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'PMG Grade',
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: AppColors.accent.withOpacity(0.1),
+                                    child: const Text(
+                                      'HL',
+                                      style: TextStyle(
+                                        color: AppColors.accent,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                        fontFamily: 'Inter',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'HungLD5',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  IconButton(
+                                    icon: const Icon(Icons.logout_rounded,
+                                        size: 16, color: AppColors.textMuted),
+                                    onPressed: () => state.navigateTo(AppScreen.login),
+                                    tooltip: 'Đăng xuất',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                    splashRadius: 16,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                           // ─── Hero Banner ───
                           Container(
                             padding: const EdgeInsets.all(40),
@@ -345,6 +418,30 @@ class _SetupScreenState extends State<SetupScreen> {
                 ),
               ),
               const Spacer(),
+              if (state.students.isNotEmpty) ...[
+                ElevatedButton.icon(
+                  onPressed: () => _showExportAllDialog(context, state),
+                  icon: const Icon(Icons.download_rounded, size: 14),
+                  label: const Text('Xuất CSV',
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               _buildStatusBadge(session['status'], progress),
             ],
           ),
@@ -497,7 +594,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _buildStudentPanel(BuildContext context, AppStateProvider state) {
-    final students = state.students.where((s) {
+    final students = state.displayedStudents.where((s) {
       if (_studentSearch.isEmpty) return true;
       final q = _studentSearch.toLowerCase();
       return s.alias.toLowerCase().contains(q) ||
@@ -546,7 +643,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '${state.students.length}',
+                    '${state.displayedStudents.length}',
                     style: const TextStyle(
                       color: AppColors.accent,
                       fontWeight: FontWeight.w700,
@@ -1614,6 +1711,371 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
             ],
           ),
         ),
+  void _showExportAllDialog(BuildContext context, AppStateProvider state) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.bg1,
+        child: Container(
+          width: 850,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+  void _showExportAllDialog(BuildContext context, AppStateProvider state) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.bg1,
+        child: Container(
+          width: 850,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Xuất toàn bộ điểm CSV', style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.bg2,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border0),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Tiến độ chấm điểm:', style: TextStyle(color: AppColors.textMuted, fontFamily: 'Inter', fontSize: 14)),
+                        Text('${state.gradedCount} / ${state.students.length} bài', style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: state.students.isEmpty ? 0 : state.gradedCount / state.students.length,
+                      backgroundColor: AppColors.bg4,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                      minHeight: 6,
+                    ),
+                    if (state.gradedCount < state.students.length) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file CSV.',
+                              style: TextStyle(color: AppColors.warning, fontFamily: 'Inter', fontSize: 12, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('Xem trước bảng điểm Excel tổng hợp (Demo dữ liệu xuất):', 
+                  style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              _buildExcelPreviewTable(state),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final path = await state.exportAllGradesToCsv();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            path != null
+                                ? 'Đã xuất CSV: $path'
+                                : 'Hủy xuất file hoặc không lưu được.',
+                            style: const TextStyle(fontFamily: 'Inter'),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    icon: const Icon(Icons.check_circle_outline, size: 16),
+                    label: const Text('Xác nhận Xuất File', style: TextStyle(fontFamily: 'Inter')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Xuất toàn bộ điểm CSV', style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.bg2,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border0),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Tiến độ chấm điểm:', style: TextStyle(color: AppColors.textMuted, fontFamily: 'Inter', fontSize: 14)),
+                        Text('${state.gradedCount} / ${state.students.length} bài', style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: state.students.isEmpty ? 0 : state.gradedCount / state.students.length,
+                      backgroundColor: AppColors.bg4,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                      minHeight: 6,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    if (state.gradedCount < state.students.length) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file CSV.',
+                              style: TextStyle(color: AppColors.warning, fontFamily: 'Inter', fontSize: 12, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('Xem trước bảng điểm Excel tổng hợp (Demo dữ liệu xuất):', 
+                  style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              _buildExcelPreviewTable(state),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final path = await state.exportAllGradesToCsv();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            path != null
+                                ? 'Đã xuất CSV: $path'
+                                : 'Hủy xuất file hoặc không lưu được.',
+                            style: const TextStyle(fontFamily: 'Inter'),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    icon: const Icon(Icons.check_circle_outline, size: 16),
+                    label: const Text('Xác nhận Xuất File', style: TextStyle(fontFamily: 'Inter')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExcelPreviewTable(AppStateProvider state) {
+    const headerBg = Color(0xFFFCE4D6);
+    const commentBg = Color(0xFFFFFF00);
+    const totalColor = Color(0xFF002060);
+
+    Widget cell(String text, {Color? bg, bool isBold = false, Color? textColor, Alignment align = Alignment.center}) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        color: bg ?? AppColors.bg0,
+        alignment: align,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: textColor ?? AppColors.textPrimary,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
+
+    final rows = <TableRow>[];
+
+    // Row 1: Headers
+    rows.add(
+      TableRow(
+        children: [
+          cell('Alias', bg: headerBg, isBold: true),
+          cell('Marker', bg: headerBg, isBold: true),
+          cell('Question 1', bg: headerBg, isBold: true),
+          cell('Question 2', bg: headerBg, isBold: true),
+          cell('Question 3', bg: headerBg, isBold: true),
+          cell('Question 4', bg: headerBg, isBold: true),
+          cell('Question 5', bg: headerBg, isBold: true),
+          cell('Total', bg: headerBg, isBold: true, textColor: totalColor),
+          cell('Comment', bg: commentBg, isBold: true, align: Alignment.centerLeft),
+        ],
+      ),
+    );
+
+    // Row 2: Max Points
+    rows.add(
+      TableRow(
+        children: [
+          cell('', bg: headerBg),
+          cell('', bg: headerBg),
+          cell('20', bg: headerBg, isBold: true),
+          cell('20', bg: headerBg, isBold: true),
+          cell('20', bg: headerBg, isBold: true),
+          cell('20', bg: headerBg, isBold: true),
+          cell('20', bg: headerBg, isBold: true),
+          cell('100', bg: headerBg, isBold: true, textColor: totalColor),
+          cell('', bg: commentBg),
+        ],
+      ),
+    );
+
+    // Row 3+: Student rows (take up to 6 students)
+    final demoStudents = state.students.isNotEmpty 
+        ? state.students 
+        : MockData.getSampleStudents();
+
+    for (final student in demoStudents.take(6)) {
+      final qScores = <String>[];
+      final currentCriteria = student.criteria.isNotEmpty 
+          ? student.criteria 
+          : MockData.getSampleCriteria();
+
+      for (int i = 0; i < 5; i++) {
+        if (currentCriteria.length > i) {
+          final maxS = currentCriteria[i].totalMaxScore;
+          final earned = student.criteria.isNotEmpty ? currentCriteria[i].totalScore : (maxS * 0.8);
+          qScores.add(earned.toStringAsFixed(1));
+        } else {
+          qScores.add('0.0');
+        }
+      }
+
+      final studentTotal = student.criteria.isNotEmpty 
+          ? student.computedTotal 
+          : 80.0;
+
+      rows.add(
+        TableRow(
+          children: [
+            cell(student.alias, align: Alignment.center),
+            cell(student.marker ?? 'HungLD5', align: Alignment.center),
+            cell(qScores[0]),
+            cell(qScores[1]),
+            cell(qScores[2]),
+            cell(qScores[3]),
+            cell(qScores[4]),
+            cell(studentTotal.toStringAsFixed(1), isBold: true, textColor: totalColor),
+            cell(student.finalPublicComment, align: Alignment.centerLeft),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border0),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: 850,
+          child: Table(
+            border: TableBorder.all(color: AppColors.border0.withOpacity(0.5), width: 0.8),
+            columnWidths: const {
+              0: FixedColumnWidth(90),   // Alias
+              1: FixedColumnWidth(90),   // Marker
+              2: FixedColumnWidth(85),   // Q1
+              3: FixedColumnWidth(85),   // Q2
+              4: FixedColumnWidth(85),   // Q3
+              5: FixedColumnWidth(85),   // Q4
+              6: FixedColumnWidth(85),   // Q5
+              7: FixedColumnWidth(75),   // Total
+              8: FlexColumnWidth(),      // Comment
+            },
+            children: rows,
+          ),
+        ),
       ),
     );
   }
@@ -1775,120 +2237,6 @@ class _StatusChip extends StatelessWidget {
     );
   }
 }
-
-class _StudentPreviewRow extends StatelessWidget {
-  final dynamic student;
-  final int index;
-  final bool striped;
-  const _StudentPreviewRow({
-    required this.student,
-    required this.index,
-    this.striped = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Color statusColor;
-    String statusLabel;
-    switch (student.status) {
-      case GradingStatus.graded:
-        statusColor = AppColors.success;
-        statusLabel = 'Đã chấm';
-        break;
-      case GradingStatus.inProgress:
-        statusColor = AppColors.warning;
-        statusLabel = 'Đang chấm';
-        break;
-      default:
-        statusColor = AppColors.textMuted;
-        statusLabel = 'Chưa chấm';
-    }
-
-    final hasName = student.name != null && student.name!.trim().isNotEmpty;
-    final score = student.finalScaleScore;
-    Color? scoreColor;
-    if (score != null) {
-      scoreColor = score >= AppStateProvider.passScaleThreshold
-          ? AppColors.success
-          : AppColors.danger;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: striped ? AppColors.bg2.withOpacity(0.55) : Colors.transparent,
-      child: Row(
-        children: [
-          SizedBox(
-            width: 32,
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 11,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Icon(Icons.person_outline,
-                    size: 14, color: AppColors.accent.withOpacity(0.7)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    student.alias,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              hasName ? student.name! : '—',
-              style: TextStyle(
-                color: hasName ? AppColors.textPrimary : AppColors.textMuted,
-                fontSize: 12,
-                fontStyle: hasName ? FontStyle.normal : FontStyle.italic,
-                fontFamily: 'Inter',
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.center,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: statusColor.withOpacity(0.25)),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
             flex: 1,
             child: Text(
               score != null ? score.toStringAsFixed(1) : '—',

@@ -17,6 +17,7 @@ class AppStateProvider extends ChangeNotifier {
   bool _isLoadingAI = false;
   String? _errorMessage;
   String? _currentSessionName;
+  String? _selectedMarker;
 
   // Track multiple uploaded CSV student lists
   List<Map<String, String>> _uploadedCSVs = [];
@@ -41,6 +42,30 @@ class AppStateProvider extends ChangeNotifier {
   List<Map<String, String>> get uploadedSubmissionFolders =>
       _uploadedSubmissionFolders;
   int get selectedCSVIndex => _selectedCSVIndex;
+  String? get selectedMarker => _selectedMarker;
+
+  List<String> get uniqueMarkers {
+    return students
+        .map((s) => s.marker)
+        .where((m) => m != null && m.trim().isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+  }
+
+  List<StudentSubmission> get displayedStudents {
+    if (_selectedMarker == null || _selectedMarker!.isEmpty) {
+      return students;
+    }
+    return students.where((s) {
+      return s.marker?.toLowerCase() == _selectedMarker!.toLowerCase();
+    }).toList();
+  }
+
+  void setSelectedMarker(String? marker) {
+    _selectedMarker = marker;
+    notifyListeners();
+  }
 
   String get sessionStorageId =>
       GradingStorageService.sessionIdFromName(_currentSessionName);
@@ -55,23 +80,23 @@ class AppStateProvider extends ChangeNotifier {
 
   static const double passScaleThreshold = 5.0;
 
-  int get assignedCount => students.length;
+  int get assignedCount => displayedStudents.length;
   int get gradedCount =>
-      students.where((s) => s.status == GradingStatus.graded).length;
+      displayedStudents.where((s) => s.status == GradingStatus.graded).length;
   int get ungradedCount =>
-      students.where((s) => s.status == GradingStatus.ungraded).length;
+      displayedStudents.where((s) => s.status == GradingStatus.ungraded).length;
   int get inProgressCount =>
-      students.where((s) => s.status == GradingStatus.inProgress).length;
+      displayedStudents.where((s) => s.status == GradingStatus.inProgress).length;
 
   /// Chưa chấm xong (chưa chấm + đang chấm).
   int get pendingGradeCount => ungradedCount + inProgressCount;
-  int get passCount => students
+  int get passCount => displayedStudents
       .where((s) =>
           s.status == GradingStatus.graded &&
           s.finalScaleScore != null &&
           s.finalScaleScore! >= passScaleThreshold)
       .length;
-  int get failCount => students
+  int get failCount => displayedStudents
       .where((s) =>
           s.status == GradingStatus.graded &&
           s.finalScaleScore != null &&
@@ -327,12 +352,14 @@ class AppStateProvider extends ChangeNotifier {
 
   StudentSubmission? get nextUngradedStudent {
     if (_selectedStudent == null) return null;
-    final idx = students.indexWhere((s) => s.alias == _selectedStudent!.alias);
-    for (var i = idx + 1; i < students.length; i++) {
-      if (students[i].status != GradingStatus.graded) return students[i];
+    final list = displayedStudents;
+    final idx = list.indexWhere((s) => s.alias == _selectedStudent!.alias);
+    if (idx == -1) return null;
+    for (var i = idx + 1; i < list.length; i++) {
+      if (list[i].status != GradingStatus.graded) return list[i];
     }
     for (var i = 0; i < idx; i++) {
-      if (students[i].status != GradingStatus.graded) return students[i];
+      if (list[i].status != GradingStatus.graded) return list[i];
     }
     return null;
   }
@@ -457,6 +484,26 @@ class AppStateProvider extends ChangeNotifier {
       students: merged,
     );
 
+    final markers = merged
+        .map((s) => s.marker)
+        .where((m) => m != null && m.trim().isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    if (markers.isNotEmpty) {
+      final containsHung = markers.any((m) =>
+          m.toLowerCase() == 'hungld5' || m.toLowerCase() == 'hl');
+      if (containsHung) {
+        _selectedMarker = markers.firstWhere((m) =>
+            m.toLowerCase() == 'hungld5' || m.toLowerCase() == 'hl');
+      } else {
+        _selectedMarker = markers.first;
+      }
+    } else {
+      _selectedMarker = null;
+    }
+
     notifyListeners();
     return merged.length;
   }
@@ -499,6 +546,7 @@ class AppStateProvider extends ChangeNotifier {
     _uploadedCSVs = [];
     _uploadedSubmissionFolders = [];
     _selectedCSVIndex = -1;
+    _selectedMarker = null;
     _setupImportStorage.clearAll();
     notifyListeners();
   }
