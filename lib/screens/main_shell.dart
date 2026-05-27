@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/app_state_provider.dart';
-import 'auth/login_screen.dart';
 import 'setup/setup_screen.dart';
 import 'grading/grading_screen.dart';
 import '../widgets/title_bar.dart';
@@ -42,9 +41,6 @@ class _MainShellState extends State<MainShell> with WindowListener {
               builder: (context, state, _) {
                 Widget childScreen;
                 switch (state.currentScreen) {
-                  case AppScreen.login:
-                    childScreen = const LoginScreen(key: ValueKey('login'));
-                    break;
                   case AppScreen.setup:
                     childScreen = const SetupScreen(key: ValueKey('setup'));
                     break;

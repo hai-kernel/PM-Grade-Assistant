@@ -170,7 +170,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
               child: Text(
                 '${tab.$2} (${tab.$3})',
                 style: TextStyle(
-                  color: isSelected ? AppColors.accentLight : AppColors.textMuted,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
                   fontSize: 11,
                   fontFamily: 'Inter',
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -203,7 +203,7 @@ class _StudentListPanelState extends State<StudentListPanel> {
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFamily: 'Inter')),
                     const Spacer(),
                     Text('${(pct * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(color: AppColors.accentLight, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                        style: const TextStyle(color: AppColors.accent, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -215,40 +215,6 @@ class _StudentListPanelState extends State<StudentListPanel> {
                     valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
                     minHeight: 4,
                   ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.border0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            color: AppColors.bg2,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.accent.withOpacity(0.12),
-                  child: const Text('HL', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Inter')),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('HungLD5', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Inter')),
-                      Text('Giảng viên chấm thi', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontFamily: 'Inter')),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout_rounded, size: 14, color: AppColors.textMuted),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () {
-                    state.navigateTo(AppScreen.login);
-                  },
-                  tooltip: 'Đăng xuất',
                 ),
               ],
             ),
@@ -316,8 +282,8 @@ class _StudentTileState extends State<_StudentTile> {
               Expanded(
                 child: Text(
                   widget.student.alias,
-                  style: TextStyle(
-                    color: widget.isSelected ? AppColors.accentLight : AppColors.textPrimary,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Inter',

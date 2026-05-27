@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/app_state_provider.dart';
-import '../core/models/app_models.dart';
+import 'ai_settings_dialog.dart';
 
 class GradingTopBar extends StatelessWidget {
   final bool studentPanelVisible;
@@ -48,7 +48,7 @@ class GradingTopBar extends StatelessWidget {
           // Back to setup
           _TopBarButton(
             icon: Icons.arrow_back,
-            label: 'Setup',
+            label: 'Quay lại',
             onTap: () => state.navigateTo(AppScreen.setup),
           ),
           const SizedBox(width: 4),
@@ -99,10 +99,17 @@ class GradingTopBar extends StatelessWidget {
           const SizedBox(width: 12),
           Container(width: 1, height: 20, color: AppColors.border0),
           const SizedBox(width: 12),
+          // AI Settings
+          _TopBarButton(
+            icon: Icons.auto_awesome,
+            label: 'AI Settings',
+            onTap: () => AiSettingsDialog.show(context),
+          ),
+          const SizedBox(width: 8),
           // Export all
           _TopBarButton(
             icon: Icons.download_rounded,
-            label: 'Xuất CSV',
+            label: 'Xuất Excel',
             onTap: () => _showExportAllDialog(context, state),
             accent: true,
           ),
@@ -119,7 +126,7 @@ class GradingTopBar extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: AppColors.bg1,
         child: Container(
-          width: 850,
+          width: 500,
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -136,7 +143,7 @@ class GradingTopBar extends StatelessWidget {
                     child: const Icon(Icons.download_rounded, color: AppColors.success, size: 24),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Xuất toàn bộ điểm CSV', style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Xuất toàn bộ điểm Excel', style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -173,7 +180,7 @@ class GradingTopBar extends StatelessWidget {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file CSV.',
+                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file Excel.',
                               style: TextStyle(color: AppColors.warning, fontFamily: 'Inter', fontSize: 12, height: 1.4),
                             ),
                           ),
@@ -183,11 +190,6 @@ class GradingTopBar extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text('Xem trước bảng điểm Excel tổng hợp (Demo dữ liệu xuất):', 
-                  style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
-              _buildExcelPreviewTable(state),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -200,13 +202,13 @@ class GradingTopBar extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () async {
                       Navigator.pop(ctx);
-                      final path = await state.exportAllGradesToCsv();
+                      final path = await state.exportAllGradesToExcel();
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
                             path != null
-                                ? 'Đã xuất CSV: $path'
+                                ? 'Đã xuất Excel: $path'
                                 : 'Hủy xuất file hoặc không lưu được.',
                             style: const TextStyle(fontFamily: 'Inter'),
                           ),
@@ -292,36 +294,28 @@ class GradingTopBar extends StatelessWidget {
     );
 
     // Row 3+: Student rows (take up to 6 students)
-    final demoStudents = state.students.isNotEmpty 
-        ? state.students 
-        : MockData.getSampleStudents();
+    final demoStudents = state.students;
 
     for (final student in demoStudents.take(6)) {
-      // Mock scores if criteria list is empty
       final qScores = <String>[];
-      final currentCriteria = student.criteria.isNotEmpty 
-          ? student.criteria 
-          : MockData.getSampleCriteria();
+      final currentCriteria = student.criteria;
 
       for (int i = 0; i < 5; i++) {
         if (currentCriteria.length > i) {
-          final maxS = currentCriteria[i].totalMaxScore;
-          final earned = student.criteria.isNotEmpty ? currentCriteria[i].totalScore : (maxS * 0.8);
+          final earned = currentCriteria[i].totalScore;
           qScores.add(earned.toStringAsFixed(1));
         } else {
           qScores.add('0.0');
         }
       }
 
-      final studentTotal = student.criteria.isNotEmpty 
-          ? student.computedTotal 
-          : 80.0; // dummy fallback
+      final studentTotal = student.computedTotal;
 
       rows.add(
         TableRow(
           children: [
             cell(student.alias, align: Alignment.center),
-            cell(student.marker ?? 'HungLD5', align: Alignment.center),
+            cell(student.marker ?? '', align: Alignment.center),
             cell(qScores[0]),
             cell(qScores[1]),
             cell(qScores[2]),

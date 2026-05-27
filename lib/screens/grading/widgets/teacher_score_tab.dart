@@ -189,7 +189,7 @@ class _TeacherCriterionCard extends StatelessWidget {
                             child: Text(
                               sub.id,
                               style: const TextStyle(
-                                color: AppColors.accentLight,
+                                color: AppColors.accent,
                                 fontSize: 10,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,

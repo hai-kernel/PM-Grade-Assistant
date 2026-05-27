@@ -41,11 +41,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.accent, AppColors.purple],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.accent,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Center(

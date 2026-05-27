@@ -14,84 +14,83 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  final List<Map<String, dynamic>> _sessions = [
-    {
-      'id': 'session_pe01',
-      'semester': 'SP26',
-      'subject': 'PMG201c',
-      'type': 'PE',
-      'examCode': 'PE01',
-      'totalSubmissions': 8,
-      'progress': 0.375, // 3 out of 8 graded
-      'status': 'grading',
-    },
-    {
-      'id': 'session_fe01',
-      'semester': 'SP26',
-      'subject': 'PMG201c',
-      'type': 'FE',
-      'examCode': 'FE01',
-      'totalSubmissions': 0,
-      'progress': 0.0,
-      'status': 'pending',
-    },
-    {
-      'id': 'session_pe02',
-      'semester': 'SU25',
-      'subject': 'PMG201c',
-      'type': 'PE',
-      'examCode': 'PE02',
-      'totalSubmissions': 8,
-      'progress': 1.0,
-      'status': 'graded',
-    },
-  ];
-  Map<String, dynamic>? _selectedSession;
+  List<Map<String, dynamic>> _sessions = [];
+  bool _isLoadingSessions = true;
   String _studentSearch = '';
 
-  void _onSessionSelected(Map<String, dynamic> session) {
-    setState(() {
-      _selectedSession = session;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  Future<void> _loadSessions() async {
     final state = context.read<AppStateProvider>();
+    final list = await state.setupImportStorage.loadSessions();
+    if (!mounted) return;
+    setState(() {
+      _sessions = list;
+      _isLoadingSessions = false;
+    });
+
+    if (state.currentSessionId != null) {
+      final matched = list.firstWhere(
+        (s) => s['id'] == state.currentSessionId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (matched.isNotEmpty) {
+        state.setCurrentSession(matched);
+      }
+    }
+
+    if (state.currentSessionId != null && state.students.isEmpty) {
+      await state.loadSessionData(state.currentSessionId!);
+    }
+  }
+
+  void _onSessionSelected(Map<String, dynamic> session) async {
+    final state = context.read<AppStateProvider>();
+    state.setCurrentSession(session);
+    state.setCurrentSessionId(session['id']);
     state.setCurrentSessionName(
         '${session['subject']} / ${session['semester']} / ${session['examCode']}');
-    if (session['status'] != 'pending') {
-      state.loadDemoData();
-    } else {
-      state.resetSetupData();
-    }
+    await state.loadSessionData(session['id']);
   }
 
   void _onBackToSessionList() {
     setState(() {
-      _selectedSession = null;
       _studentSearch = '';
     });
-    context.read<AppStateProvider>().resetSetupData();
+    final state = context.read<AppStateProvider>();
+    state.setCurrentSession(null);
+    state.setCurrentSessionId(null);
+    state.setCurrentSessionName(null);
+    state.resetSetupData();
+    _loadSessions();
   }
 
   void _onCreateSession() async {
     final result = await _showCreateSessionDialog();
     if (result != null) {
-      setState(() {
-        final newSession = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'examCode': result['examCode']!,
-          'semester': result['semester']!,
-          'subject': result['subject']!,
-          'type': result['type']!,
-          'totalSubmissions': 0,
-          'progress': 0.0,
-          'status': 'pending',
-        };
-        _sessions.add(newSession);
-        _selectedSession = newSession;
-        final state = context.read<AppStateProvider>();
-        state.setCurrentSessionName(
-            '${result['subject']} / ${result['semester']} / ${result['examCode']}');
-        state.resetSetupData();
-      });
+      final state = context.read<AppStateProvider>();
+      final newSession = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'examCode': result['examCode']!,
+        'semester': result['semester']!,
+        'subject': result['subject']!,
+        'type': result['type']!,
+        'totalSubmissions': 0,
+        'progress': 0.0,
+        'status': 'pending',
+      };
+      await state.setupImportStorage.saveSession(newSession);
+      state.setCurrentSessionName(
+          '${result['subject']} / ${result['semester']} / ${result['examCode']}');
+      state.resetSetupData();
+      await _loadSessions();
+      final createdSession = _sessions.firstWhere((s) => s['id'] == newSession['id']);
+      state.setCurrentSession(createdSession);
+      state.setCurrentSessionId(createdSession['id'] as String?);
     }
   }
 
@@ -103,14 +102,12 @@ class _SetupScreenState extends State<SetupScreen> {
       color: AppColors.bg0,
       child: Row(
         children: [
-          SetupSidebar(
-            onLogout: () => state.navigateTo(AppScreen.login),
-          ),
+          const SetupSidebar(),
           const VerticalDivider(
               width: 1, thickness: 1, color: AppColors.border0),
           // ─── Main Content ───
           Expanded(
-            child: _selectedSession != null
+            child: state.currentSession != null
                 ? _buildSessionDetailView(context, state)
                 : Center(
                     child: Container(
@@ -123,19 +120,9 @@ class _SetupScreenState extends State<SetupScreen> {
                           Container(
                             padding: const EdgeInsets.all(40),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [AppColors.accent, AppColors.purple],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.accent.withOpacity(0.2),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
+                              color: AppColors.bg4,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.accent.withOpacity(0.2)),
                             ),
                             child: Row(
                               children: [
@@ -148,14 +135,14 @@ class _SetupScreenState extends State<SetupScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
+                                          color: AppColors.accent.withOpacity(0.1),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
                                         child: const Text(
-                                          '🎉 Chào mừng trở lại!',
+                                          'Chào mừng trở lại!',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: AppColors.accent,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                             fontFamily: 'Inter',
@@ -166,7 +153,7 @@ class _SetupScreenState extends State<SetupScreen> {
                                       const Text(
                                         'Hệ thống quản lý & Chấm điểm\nProject Management',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontSize: 28,
                                           fontWeight: FontWeight.w800,
                                           height: 1.25,
@@ -175,10 +162,10 @@ class _SetupScreenState extends State<SetupScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      Text(
+                                      const Text(
                                         'Chọn một đợt thi bên dưới hoặc tạo phiên chấm mới để bắt đầu quá trình chấm điểm tự động, hỗ trợ phân tích AI và xuất báo cáo chuẩn xác.',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                           height: 1.5,
                                           fontFamily: 'Inter',
@@ -194,13 +181,13 @@ class _SetupScreenState extends State<SetupScreen> {
                                                 fontFamily: 'Inter',
                                                 fontWeight: FontWeight.w600)),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: AppColors.accent,
+                                          backgroundColor: AppColors.accent,
+                                          foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 24, vertical: 14),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(10),
+                                                BorderRadius.circular(8),
                                           ),
                                           elevation: 0,
                                         ),
@@ -213,14 +200,14 @@ class _SetupScreenState extends State<SetupScreen> {
                                   width: 140,
                                   height: 140,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: AppColors.accent.withOpacity(0.06),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
                                     child: Icon(
                                         Icons.auto_awesome_mosaic_rounded,
                                         size: 70,
-                                        color: Colors.white.withOpacity(0.9)),
+                                        color: AppColors.accent.withOpacity(0.85)),
                                   ),
                                 ),
                               ],
@@ -233,15 +220,8 @@ class _SetupScreenState extends State<SetupScreen> {
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               color: AppColors.bg1,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: AppColors.border0),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
                             child: _buildSessionSelector(compact: false),
                           ),
@@ -274,12 +254,12 @@ class _SetupScreenState extends State<SetupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        flex: 7,
+                        flex: 6,
                         child: _buildStudentPanel(context, state),
                       ),
                       const SizedBox(width: 16),
-                      SizedBox(
-                        width: 380,
+                      Expanded(
+                        flex: 4,
                         child: _buildSessionSidebar(context, state),
                       ),
                     ],
@@ -302,7 +282,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _buildSessionHeaderCard(AppStateProvider state) {
-    final session = _selectedSession!;
+    final session = state.currentSession!;
     final progress = (session['progress'] as num?)?.toDouble() ?? 0.0;
     final gradedPct = state.students.isEmpty
         ? progress
@@ -355,12 +335,8 @@ class _SetupScreenState extends State<SetupScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.accent, AppColors.purple],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.assignment_rounded,
                     color: Colors.white, size: 22),
@@ -646,8 +622,8 @@ class _SetupScreenState extends State<SetupScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
-                children: const [
-                  SizedBox(
+                children: [
+                  const SizedBox(
                       width: 32,
                       child: Text('#',
                           style: TextStyle(
@@ -655,25 +631,49 @@ class _SetupScreenState extends State<SetupScreen> {
                               fontWeight: FontWeight.w700,
                               color: AppColors.textMuted,
                               fontFamily: 'Inter'))),
-                  Expanded(
+                  const Expanded(
+                    flex: 2,
+                    child: Text('Mã SV',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                            fontFamily: 'Inter')),
+                  ),
+                  const Expanded(
                     flex: 3,
-                    child: Text('Alias / Mã SV',
+                    child: Text('Họ và tên',
                         style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textMuted,
                             fontFamily: 'Inter')),
                   ),
-                  Expanded(
-                    flex: 4,
-                    child: Text('Họ tên',
+                  const Expanded(
+                    flex: 2,
+                    child: Text('Giảng viên',
                         style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textMuted,
                             fontFamily: 'Inter')),
                   ),
-                  Expanded(
+                  ...state.setupData.parsedCriteria.map((criterion) {
+                    return Expanded(
+                      flex: 1,
+                      child: Text(
+                        criterion.id,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    );
+                  }),
+                  const Expanded(
                     flex: 2,
                     child: Text('Trạng thái',
                         textAlign: TextAlign.center,
@@ -683,15 +683,27 @@ class _SetupScreenState extends State<SetupScreen> {
                             color: AppColors.textMuted,
                             fontFamily: 'Inter')),
                   ),
-                  Expanded(
+                  const Expanded(
                     flex: 1,
-                    child: Text('Điểm',
+                    child: Text('Total',
                         textAlign: TextAlign.end,
                         style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textMuted,
                             fontFamily: 'Inter')),
+                  ),
+                  const Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Text('Comment',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textMuted,
+                              fontFamily: 'Inter')),
+                    ),
                   ),
                 ],
               ),
@@ -717,6 +729,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _buildSessionSelector({bool compact = true}) {
+    final state = context.read<AppStateProvider>();
     final Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
     for (final session in _sessions) {
       final sem = session['semester'] ?? 'Khác';
@@ -795,8 +808,8 @@ class _SetupScreenState extends State<SetupScreen> {
                   spacing: 10,
                   runSpacing: 10,
                   children: sessionList.map((session) {
-                    final isSelected = _selectedSession != null &&
-                        _selectedSession!['id'] == session['id'];
+                    final isSelected = state.currentSession != null &&
+                        state.currentSession!['id'] == session['id'];
                     return _SessionPickerCard(
                       session: session,
                       isSelected: isSelected,
@@ -1071,47 +1084,6 @@ class _SetupScreenState extends State<SetupScreen> {
               fileName: selectedCsvName,
               onPick: () async => _pickFile(context, 'csv'),
             ),
-            if (state.uploadedCSVs.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 40, bottom: 4),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: List.generate(state.uploadedCSVs.length, (idx) {
-                    final csv = state.uploadedCSVs[idx];
-                    final isSelected = state.selectedCSVIndex == idx;
-                    return InkWell(
-                      onTap: () => state.selectCSVFile(idx),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color:
-                              isSelected ? AppColors.successBg : AppColors.bg2,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.success
-                                : AppColors.border0,
-                          ),
-                        ),
-                        child: Text(
-                          csv['name']!,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isSelected
-                                ? AppColors.success
-                                : AppColors.textMuted,
-                            fontFamily: 'Inter',
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
             _buildImportRow(
               icon: Icons.folder_open_rounded,
               label: 'Thư mục bài thi',
@@ -1120,36 +1092,6 @@ class _SetupScreenState extends State<SetupScreen> {
               fileName: latestFolderName,
               onPick: () async => _pickFile(context, 'folder'),
             ),
-            if (state.uploadedSubmissionFolders.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 40, bottom: 4),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: state.uploadedSubmissionFolders.map((folder) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: AppColors.warning.withOpacity(0.4),
-                        ),
-                      ),
-                      child: Text(
-                        folder['name'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColors.warning,
-                          fontFamily: 'Inter',
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
           ],
         ),
       ),
@@ -1166,13 +1108,13 @@ class _SetupScreenState extends State<SetupScreen> {
   }) {
     final hasFile = fileName != null;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
+          SizedBox(
+            width: 140,
             child: Text(
               label,
               style: const TextStyle(
@@ -1181,27 +1123,32 @@ class _SetupScreenState extends State<SetupScreen> {
                 color: AppColors.textPrimary,
                 fontFamily: 'Inter',
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: Text(
-              typeLabel,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: color,
-                fontFamily: 'Inter',
+          SizedBox(
+            width: 75,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  typeLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    fontFamily: 'Inter',
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
           Expanded(
-            flex: 3,
             child: Row(
               children: [
                 Icon(
@@ -1211,7 +1158,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   size: 14,
                   color: hasFile ? color : AppColors.textMuted,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     fileName ?? 'Chưa chọn file',
@@ -1228,25 +1175,28 @@ class _SetupScreenState extends State<SetupScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: () => onPick(),
-            icon: Icon(
-              hasFile ? Icons.sync_rounded : Icons.upload_file_rounded,
-              size: 14,
-            ),
-            label: Text(
-              hasFile ? 'Đổi' : 'Import',
-              style: const TextStyle(fontFamily: 'Inter', fontSize: 12),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: color,
-              side: BorderSide(color: color.withOpacity(0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              minimumSize: const Size(0, 30),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+          const SizedBox(width: 16),
+          SizedBox(
+            width: 90,
+            child: OutlinedButton.icon(
+              onPressed: () => onPick(),
+              icon: Icon(
+                hasFile ? Icons.sync_rounded : Icons.upload_file_rounded,
+                size: 14,
+              ),
+              label: Text(
+                hasFile ? 'Đổi' : 'Import',
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 12),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: color,
+                side: BorderSide(color: color.withOpacity(0.4)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: const Size(0, 30),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
             ),
           ),
@@ -1283,7 +1233,7 @@ class _SetupScreenState extends State<SetupScreen> {
         OutlinedButton.icon(
           onPressed: () async {
             try {
-              final message = await state.loadDemoData();
+              final message = await state.refreshImportedData();
               if (!context.mounted) return;
               _showImportSnack(context, message);
             } catch (e) {
@@ -1292,10 +1242,37 @@ class _SetupScreenState extends State<SetupScreen> {
             }
           },
           icon: const Icon(Icons.refresh_rounded, size: 16),
-          label: const Text('Nạp lại từ file đã import',
+          label: const Text('Làm mới dữ liệu từ file',
               style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () async {
+            if (state.students.isEmpty) {
+              _showImportSnack(context, 'Không có dữ liệu sinh viên để xuất.');
+              return;
+            }
+            try {
+              final path = await state.exportAllGradesToExcel();
+              if (!context.mounted) return;
+              if (path != null) {
+                _showImportSnack(context, 'Đã xuất file điểm thành công: $path');
+              }
+            } catch (e) {
+              if (!context.mounted) return;
+              _showImportSnack(context, 'Lỗi khi xuất file: $e');
+            }
+          },
+          icon: const Icon(Icons.download_rounded, size: 16),
+          label: const Text('Xuất báo cáo điểm (Excel/CSV)',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            foregroundColor: AppColors.success,
+            side: const BorderSide(color: AppColors.success),
           ),
         ),
       ],
@@ -1321,7 +1298,7 @@ class _SetupScreenState extends State<SetupScreen> {
           dialogTitle: 'Chọn ảnh đề thi (.png/.jpg)',
         );
         if (!context.mounted || picked == null) return;
-        state.setExamFile(picked.path, picked.name);
+        await state.setExamFile(picked.path, picked.name);
         _showImportSnack(context, 'Đã import đề thi: ${picked.name}');
         break;
       case 'guide':
@@ -1329,7 +1306,7 @@ class _SetupScreenState extends State<SetupScreen> {
           dialogTitle: 'Chọn file barem chấm điểm (.docx)',
         );
         if (!context.mounted || picked == null) return;
-        state.setGradingGuide(picked.path, picked.name);
+        await state.setGradingGuide(picked.path, picked.name);
         _showImportSnack(context, 'Đã import barem: ${picked.name}');
         break;
       case 'csv':
@@ -1788,6 +1765,9 @@ class _StudentPreviewRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.read<AppStateProvider>();
+    final parsedCriteria = state.setupData.parsedCriteria;
+
     Color statusColor;
     String statusLabel;
     switch (student.status) {
@@ -1804,7 +1784,6 @@ class _StudentPreviewRow extends StatelessWidget {
         statusLabel = 'Chưa chấm';
     }
 
-    final hasName = student.name != null && student.name!.trim().isNotEmpty;
     final score = student.finalScaleScore;
     Color? scoreColor;
     if (score != null) {
@@ -1830,7 +1809,7 @@ class _StudentPreviewRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Row(
               children: [
                 Icon(Icons.person_outline,
@@ -1852,18 +1831,50 @@ class _StudentPreviewRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 3,
             child: Text(
-              hasName ? student.name! : '—',
-              style: TextStyle(
-                color: hasName ? AppColors.textPrimary : AppColors.textMuted,
+              student.name ?? '—',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
                 fontSize: 12,
-                fontStyle: hasName ? FontStyle.normal : FontStyle.italic,
                 fontFamily: 'Inter',
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              student.marker ?? '—',
+              style: TextStyle(
+                color: student.marker != null ? AppColors.textPrimary : AppColors.textMuted,
+                fontSize: 12,
+                fontFamily: 'Inter',
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          ...parsedCriteria.map((criterion) {
+            // Find this student's score for this criterion
+            final studentCriterion = student.criteria.firstWhere(
+              (c) => c.id == criterion.id,
+              orElse: () => criterion,
+            );
+            final hasCriterionScore = student.status == GradingStatus.graded;
+            final scoreVal = hasCriterionScore ? studentCriterion.totalScore : null;
+            return Expanded(
+              flex: 1,
+              child: Text(
+                scoreVal != null ? scoreVal.toStringAsFixed(1) : '—',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 11,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            );
+          }),
           Expanded(
             flex: 2,
             child: Align(
@@ -1898,6 +1909,25 @@ class _StudentPreviewRow extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text(
+                student.status == GradingStatus.graded
+                    ? student.finalPublicComment
+                    : '—',
+                style: TextStyle(
+                  color: student.status == GradingStatus.graded
+                      ? AppColors.textPrimary
+                      : AppColors.textMuted,
+                  fontSize: 11,
+                  fontFamily: 'Inter',
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),

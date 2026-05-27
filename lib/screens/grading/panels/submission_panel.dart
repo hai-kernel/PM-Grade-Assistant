@@ -132,12 +132,7 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.accent.withOpacity(0.8),
-                  AppColors.purple.withOpacity(0.8)
-                ],
-              ),
+              color: AppColors.accent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -864,7 +859,7 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
                           SnackBar(
                             content: Text(
                               path != null
-                                  ? 'Đã lưu bài ${student.alias}. Xuất CSV khi chấm xong tất cả.'
+                                  ? 'Đã lưu bài ${student.alias}. Xuất Excel khi chấm xong tất cả.'
                                   : 'Không lưu được bài ${student.alias}.',
                               style: const TextStyle(fontFamily: 'Inter'),
                             ),
@@ -943,7 +938,7 @@ class _TabChip extends StatelessWidget {
       ),
       child: Text(label,
           style: TextStyle(
-            color: isSelected ? AppColors.accentLight : AppColors.textMuted,
+            color: isSelected ? AppColors.accent : AppColors.textMuted,
             fontSize: 11,
             fontFamily: 'Inter',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

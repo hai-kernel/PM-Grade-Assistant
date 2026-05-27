@@ -14,7 +14,7 @@ class GradingResultSerializer {
       'finalScore': s.finalScore,
       'finalScaleScore': s.finalScaleScore,
       'gradedAt': DateTime.now().toIso8601String(),
-      'criteria': s.criteria.map(_criterionToJson).toList(),
+      'criteria': s.criteria.map(criterionToJson).toList(),
     };
   }
 
@@ -40,12 +40,12 @@ class GradingResultSerializer {
     final criteriaJson = json['criteria'] as List<dynamic>?;
     if (criteriaJson != null && criteriaJson.isNotEmpty) {
       student.criteria = criteriaJson
-          .map((e) => _criterionFromJson(e as Map<String, dynamic>))
+          .map((e) => criterionFromJson(e as Map<String, dynamic>))
           .toList();
     }
   }
 
-  static Map<String, dynamic> _criterionToJson(GradingCriterion c) {
+  static Map<String, dynamic> criterionToJson(GradingCriterion c) {
     return {
       'id': c.id,
       'name': c.name,
@@ -64,9 +64,9 @@ class GradingResultSerializer {
     };
   }
 
-  static GradingCriterion _criterionFromJson(Map<String, dynamic> json) {
+  static GradingCriterion criterionFromJson(Map<String, dynamic> json) {
     final subs = (json['subCriteria'] as List<dynamic>? ?? [])
-        .map((e) => _subFromJson(e as Map<String, dynamic>))
+        .map((e) => subFromJson(e as Map<String, dynamic>))
         .toList();
     return GradingCriterion(
       id: json['id'] as String,
@@ -77,7 +77,7 @@ class GradingResultSerializer {
     );
   }
 
-  static SubCriteria _subFromJson(Map<String, dynamic> json) {
+  static SubCriteria subFromJson(Map<String, dynamic> json) {
     return SubCriteria(
       id: json['id'] as String,
       name: json['name'] as String,

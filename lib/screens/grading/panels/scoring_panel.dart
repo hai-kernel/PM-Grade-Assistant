@@ -47,7 +47,7 @@ class _ScoringPanelState extends State<ScoringPanel> with SingleTickerProviderSt
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: AppColors.accent,
-                labelColor: AppColors.accentLight,
+                labelColor: AppColors.accent,
                 unselectedLabelColor: AppColors.textMuted,
                 labelStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
                 unselectedLabelStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w500, fontSize: 13),
@@ -81,10 +81,11 @@ class _ScoringPanelState extends State<ScoringPanel> with SingleTickerProviderSt
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: _buildGradingHint(context, state, student),
-                  ),
+                  if (student.status != GradingStatus.graded)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: _buildGradingHint(context, state, student),
+                    ),
                 ],
               ),
             ),
@@ -127,7 +128,7 @@ class _ScoringPanelState extends State<ScoringPanel> with SingleTickerProviderSt
               child: Text(
                 '${total.toStringAsFixed(1)} / ${max.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  color: AppColors.accentLight,
+                  color: AppColors.accent,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'Inter',

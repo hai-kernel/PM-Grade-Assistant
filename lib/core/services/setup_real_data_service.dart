@@ -23,13 +23,19 @@ class SetupRealDataService {
     List<String> csvPaths,
   ) async {
     final merged = <String, ImportedStudentRecord>{};
+    print('[SetupRealDataService] Reading from ${csvPaths.length} CSV/Excel files');
 
     for (final filePath in csvPaths) {
       if (filePath.trim().isEmpty) continue;
       final file = File(filePath);
-      if (!await file.exists()) continue;
+      if (!await file.exists()) {
+        print('[SetupRealDataService] File not found: $filePath');
+        continue;
+      }
 
       final ext = _extension(filePath).toLowerCase();
+      print('[SetupRealDataService] Reading file: $filePath (ext: $ext)');
+      
       List<List<String>> rows;
       try {
         if (ext == '.xlsx' || ext == '.xls') {
@@ -38,22 +44,44 @@ class SetupRealDataService {
           final content = await file.readAsString();
           rows = _parseCsvRows(content);
         }
-      } catch (_) {
+      } catch (e) {
+        print('[SetupRealDataService] Error reading file: $e');
         rows = const [];
       }
+      
+      print('[SetupRealDataService] Got ${rows.length} rows from file');
       if (rows.isEmpty) continue;
 
-      final header = rows.first;
-      final hasHeader = _looksLikeHeader(header);
+      int headerRowIndex = 0;
+      bool hasHeader = false;
+      for (var r = 0; r < rows.length && r < 5; r++) {
+        if (_looksLikeHeader(rows[r])) {
+          headerRowIndex = r;
+          hasHeader = true;
+          break;
+        }
+      }
+
+      final header = hasHeader ? rows[headerRowIndex] : rows.first;
       final aliasIndex = _detectAliasColumn(header, hasHeader);
       final nameIndex = _detectNameColumn(header, hasHeader);
       final markerIndex = _detectMarkerColumn(header, hasHeader);
+      
+      print('[SetupRealDataService] Header detected at row $headerRowIndex: $hasHeader, aliasIdx: $aliasIndex, nameIdx: $nameIndex, markerIdx: $markerIndex');
 
-      final startAt = hasHeader ? 1 : 0;
+      final startAt = hasHeader ? headerRowIndex + 1 : 0;
+      int rowsAdded = 0;
       for (var i = startAt; i < rows.length; i++) {
         final row = rows[i];
         final alias = _readCell(row, aliasIndex).trim();
         if (alias.isEmpty) continue;
+        final normalizedAlias = alias.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+        if (normalizedAlias == 'alias' || 
+            normalizedAlias == 'masv' || 
+            normalizedAlias == 'masinhvien' || 
+            normalizedAlias == 'studentid') {
+          continue;
+        }
 
         final record = ImportedStudentRecord(
           alias: alias,
@@ -61,9 +89,13 @@ class SetupRealDataService {
           marker: _nullIfEmpty(_readCell(row, markerIndex).trim()),
         );
         merged.putIfAbsent(alias.toLowerCase(), () => record);
+        rowsAdded++;
       }
+      
+      print('[SetupRealDataService] Added $rowsAdded student records from this file');
     }
 
+    print('[SetupRealDataService] Total merged records: ${merged.length}');
     return merged.values.toList();
   }
 
@@ -89,11 +121,19 @@ class SetupRealDataService {
     final byExact = <String, String>{};
     final byContains = <String, String>{};
     const allowedExt = {'.txt', '.md', '.markdown', '.log'};
+    
+    print('[SetupRealDataService] Indexing submission files from ${folderPaths.length} folders');
 
     for (final folderPath in folderPaths) {
       if (folderPath.trim().isEmpty) continue;
       final folder = Directory(folderPath);
-      if (!await folder.exists()) continue;
+      if (!await folder.exists()) {
+        print('[SetupRealDataService] Folder not found: $folderPath');
+        continue;
+      }
+      
+      print('[SetupRealDataService] Scanning folder: $folderPath');
+      int filesInFolder = 0;
 
       await for (final entity
           in folder.list(recursive: true, followLinks: false)) {
@@ -107,9 +147,13 @@ class SetupRealDataService {
 
         byExact.putIfAbsent(normalized, () => entity.path);
         byContains.putIfAbsent(normalized, () => entity.path);
+        filesInFolder++;
       }
+      
+      print('[SetupRealDataService] Found $filesInFolder submission files in this folder');
     }
 
+    print('[SetupRealDataService] Total indexed files: ${byContains.length}');
     return {...byContains, ...byExact};
   }
 
@@ -163,11 +207,20 @@ class SetupRealDataService {
       final n = _normalizeKey(cell);
       return n.contains('alias') ||
           n.contains('masv') ||
+          n.contains('mssv') ||
+          n.contains('masinhvien') ||
           n.contains('studentid') ||
           n.contains('hoten') ||
+          n.contains('hovaten') ||
+          n.contains('tensinhvien') ||
+          n.contains('tensv') ||
           n.contains('name') ||
+          n.contains('fullname') ||
           n.contains('marker') ||
-          n.contains('giaovien');
+          n.contains('giaovien') ||
+          n.contains('giangvien') ||
+          n.contains('gv') ||
+          n.contains('stt');
     });
   }
 
@@ -177,6 +230,8 @@ class SetupRealDataService {
       final n = _normalizeKey(header[i]);
       if (n.contains('alias') ||
           n.contains('masv') ||
+          n.contains('mssv') ||
+          n.contains('masinhvien') ||
           n == 'id' ||
           n.contains('studentid')) {
         return i;
@@ -189,7 +244,13 @@ class SetupRealDataService {
     if (!hasHeader) return 1;
     for (var i = 0; i < header.length; i++) {
       final n = _normalizeKey(header[i]);
-      if (n.contains('hoten') || n == 'ten' || n.contains('name')) return i;
+      if (n.contains('hoten') ||
+          n.contains('hovaten') ||
+          n.contains('tensinhvien') ||
+          n.contains('tensv') ||
+          n == 'ten' ||
+          n.contains('name') ||
+          n.contains('fullname')) return i;
     }
     return 1;
   }
@@ -198,7 +259,10 @@ class SetupRealDataService {
     if (!hasHeader) return 2;
     for (var i = 0; i < header.length; i++) {
       final n = _normalizeKey(header[i]);
-      if (n.contains('marker') || n.contains('giaovien')) return i;
+      if (n.contains('marker') ||
+          n.contains('giaovien') ||
+          n.contains('giangvien') ||
+          n.contains('gv')) return i;
     }
     return -1;
   }

@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Background layers (Light & Fresh Educational Blue Theme)
-  static const Color bg0 = Color(0xFFF0F4F8); // Deepest background (app shell)
+  // Background layers (Light & Flat FPT Orange Theme)
+  static const Color bg0 = Color(0xFFF7F8FA); // Deepest background (app shell)
   static const Color bg1 = Color(0xFFFFFFFF); // Main background
-  static const Color bg2 = Color(0xFFF8FAFC); // Sidebar / panels
+  static const Color bg2 = Color(0xFFF7F8FA); // Sidebar / panels
   static const Color bg3 = Color(0xFFFFFFFF); // Cards / elevated surfaces
-  static const Color bg4 = Color(0xFFE2E8F0); // Hover states / inputs
+  static const Color bg4 = Color(0xFFFFF4EC); // Hover states / inputs
 
   // Borders
-  static const Color border0 = Color(0xFFE2E8F0);
-  static const Color border1 = Color(0xFFCBD5E1);
+  static const Color border0 = Color(0xFFE5E7EB);
+  static const Color border1 = Color(0xFFD1D5DB);
 
   // Text
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
-  static const Color textMuted = Color(0xFF64748B);
-  static const Color textDisabled = Color(0xFF94A3B8);
+  static const Color textPrimary = Color(0xFF1F2937);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textMuted = Color(0xFF9CA3AF);
+  static const Color textDisabled = Color(0xFFD1D5DB);
 
-  // Accent — Educational Blue (primary actions)
-  static const Color accent = Color(0xFF2563EB);
-  static const Color accentLight = Color(0xFF3B82F6);
-  static const Color accentDark = Color(0xFF1D4ED8);
-  static const Color accentBg = Color(0xFFDBEAFE);
+  // Accent — FPT Orange
+  static const Color accent = Color(0xFFF36F21);
+  static const Color accentLight = Color(0xFFFFF4EC);
+  static const Color accentDark = Color(0xFFD0520F);
+  static const Color accentBg = Color(0xFFFFF4EC);
 
   // Success — Green
   static const Color success = Color(0xFF10B981);
@@ -89,10 +89,10 @@ class AppTheme {
       ),
       cardTheme: const CardThemeData(
         color: AppColors.bg3,
-        shadowColor: Color(0x0A000000), // very soft shadow
-        elevation: 2,
+        shadowColor: Colors.transparent,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(8)),
           side: BorderSide(color: AppColors.border0),
         ),
       ),

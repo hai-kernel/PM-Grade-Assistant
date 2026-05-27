@@ -15,6 +15,7 @@ class ScoringOverviewTab extends StatefulWidget {
 
 class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
   final Map<String, TextEditingController> _commentControllers = {};
+  final Set<String> _loadingComments = {};
   String _lastAlias = '';
 
   @override
@@ -36,6 +37,7 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
       ctrl.dispose();
     }
     _commentControllers.clear();
+    _loadingComments.clear();
 
     for (final criterion in widget.student.criteria) {
       _commentControllers[criterion.id] = TextEditingController(text: criterion.generalComment ?? '');
@@ -51,7 +53,29 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
     super.dispose();
   }
 
-  void _fillAIComment(GradingCriterion criterion, AppStateProvider state) {
+  Future<void> _fillAIComment(GradingCriterion criterion, AppStateProvider state) async {
+    // If student has file content and API key, call AI API
+    if (widget.student.fileContent.isNotEmpty) {
+      setState(() => _loadingComments.add(criterion.id));
+
+      final comment = await state.runAICommentSuggestion(
+        widget.student,
+        criterion.id,
+      );
+
+      if (mounted) {
+        setState(() => _loadingComments.remove(criterion.id));
+        if (comment != null) {
+          final ctrl = _commentControllers[criterion.id];
+          if (ctrl != null) {
+            ctrl.text = comment;
+          }
+          return;
+        }
+      }
+    }
+
+    // Fallback: concatenate existing AI reasons (offline mode)
     final parts = criterion.subCriteria
         .where((sc) => sc.aiReason != null && sc.aiReason!.trim().isNotEmpty)
         .map((sc) => sc.aiReason!.trim())
@@ -83,19 +107,8 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.accent, AppColors.purple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accent.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               children: [
@@ -191,7 +204,7 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
                       Text(
                         '${qTotal.toStringAsFixed(1)} / ${qMax.toStringAsFixed(0)}',
                         style: const TextStyle(
-                          color: AppColors.accentLight,
+                          color: AppColors.accent,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'Inter',
@@ -218,7 +231,9 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
                       
                       // AI suggestion populator button
                       InkWell(
-                        onTap: () => _fillAIComment(criterion, state),
+                        onTap: _loadingComments.contains(criterion.id)
+                            ? null
+                            : () => _fillAIComment(criterion, state),
                         borderRadius: BorderRadius.circular(4),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -227,13 +242,25 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(color: AppColors.purple.withOpacity(0.15)),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.auto_awesome, size: 10, color: AppColors.purple),
-                              SizedBox(width: 3),
+                              if (_loadingComments.contains(criterion.id))
+                                const SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: AppColors.purple,
+                                  ),
+                                )
+                              else
+                                const Icon(Icons.auto_awesome, size: 10, color: AppColors.purple),
+                              const SizedBox(width: 3),
                               Text(
-                                'Lấy nhận xét gợi ý AI',
+                                _loadingComments.contains(criterion.id)
+                                    ? 'Đang tạo...'
+                                    : 'Lấy nhận xét gợi ý AI',
                                 style: TextStyle(
                                   color: AppColors.purple,
                                   fontSize: 10,
@@ -304,7 +331,7 @@ class _ScoringOverviewTabState extends State<ScoringOverviewTab> {
                       SnackBar(
                         content: Text(
                           path != null
-                              ? 'Đã lưu bài ${widget.student.alias}. Xuất CSV khi chấm xong tất cả.'
+                              ? 'Đã lưu bài ${widget.student.alias}. Xuất Excel khi chấm xong tất cả.'
                               : 'Không lưu được bài ${widget.student.alias}.',
                           style: const TextStyle(fontFamily: 'Inter'),
                         ),

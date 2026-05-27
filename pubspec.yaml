@@ -30,6 +30,10 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   # Animations
   flutter_animate: ^4.5.0
+  # HTTP for API calls
+  http: ^1.2.0
+  # Crypto for hashing
+  crypto: ^3.0.5
   # File system
   path_provider: ^2.1.4
   path: ^1.9.0
