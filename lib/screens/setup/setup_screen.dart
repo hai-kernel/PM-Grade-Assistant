@@ -329,6 +329,132 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
+  Future<Map<String, String>?> _showCreateSessionDialog() async {
+    final codeController = TextEditingController();
+    final semController = TextEditingController();
+    final subController = TextEditingController(text: 'PMG201c');
+    final typeController = TextEditingController(text: 'PE');
+    return showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Tạo phiên chấm mới',
+            style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+                fontSize: 18)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: codeController,
+                decoration: InputDecoration(
+                  labelText: 'Mã đề',
+                  hintText: 'Ví dụ: PE01, FE02...',
+                  hintStyle:
+                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                autofocus: true,
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: semController,
+                decoration: InputDecoration(
+                  labelText: 'Học kỳ',
+                  hintText: 'Ví dụ: SP26, SU25...',
+                  hintStyle:
+                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: subController,
+                decoration: InputDecoration(
+                  labelText: 'Môn học',
+                  hintText: 'Ví dụ: PMG201c...',
+                  hintStyle:
+                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: typeController,
+                decoration: InputDecoration(
+                  labelText: 'Đợt thi (PE / FE)',
+                  hintText: 'Ví dụ: PE, FE...',
+                  hintStyle:
+                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy',
+                style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (codeController.text.isNotEmpty &&
+                  semController.text.isNotEmpty &&
+                  subController.text.isNotEmpty &&
+                  typeController.text.isNotEmpty) {
+                Navigator.pop(context, {
+                  'examCode': codeController.text.toUpperCase(),
+                  'semester': semController.text.toUpperCase(),
+                  'subject': subController.text.toUpperCase(),
+                  'type': typeController.text.toUpperCase(),
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _importReadyCount(AppStateProvider state) {
+    var n = 0;
+    if (state.setupData.examFileName != null) n++;
+    if (state.setupData.gradingGuideFileName != null) n++;
+    if (state.uploadedCSVs.isNotEmpty) n++;
+    if (state.uploadedSubmissionFolders.isNotEmpty) n++;
+    return n;
+  }
+
+
+
   Widget _buildSessionDetailView(BuildContext context, AppStateProvider state) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 16),
@@ -911,129 +1037,129 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
-  Future<Map<String, String>?> _showCreateSessionDialog() async {
-    final codeController = TextEditingController();
-    final semController = TextEditingController();
-    final subController = TextEditingController(text: 'PMG201c');
-    final typeController = TextEditingController(text: 'PE');
-    return showDialog<Map<String, String>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Tạo phiên chấm mới',
-            style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.bold,
-                fontSize: 18)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: codeController,
-                decoration: InputDecoration(
-                  labelText: 'Mã đề',
-                  hintText: 'Ví dụ: PE01, FE02...',
-                  hintStyle:
-                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                autofocus: true,
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: semController,
-                decoration: InputDecoration(
-                  labelText: 'Học kỳ',
-                  hintText: 'Ví dụ: SP26, SU25...',
-                  hintStyle:
-                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: subController,
-                decoration: InputDecoration(
-                  labelText: 'Môn học',
-                  hintText: 'Ví dụ: PMG201c...',
-                  hintStyle:
-                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: typeController,
-                decoration: InputDecoration(
-                  labelText: 'Đợt thi (PE / FE)',
-                  hintText: 'Ví dụ: PE, FE...',
-                  hintStyle:
-                      const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy',
-                style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (codeController.text.isNotEmpty &&
-                  semController.text.isNotEmpty &&
-                  subController.text.isNotEmpty &&
-                  typeController.text.isNotEmpty) {
-                Navigator.pop(context, {
-                  'examCode': codeController.text.toUpperCase(),
-                  'semester': semController.text.toUpperCase(),
-                  'subject': subController.text.toUpperCase(),
-                  'type': typeController.text.toUpperCase(),
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Xác nhận'),
-          ),
-        ],
-      ),
-    );
-  }
+  // Future<Map<String, String>?> _showCreateSessionDialog() async {
+  //   final codeController = TextEditingController();
+  //   final semController = TextEditingController();
+  //   final subController = TextEditingController(text: 'PMG201c');
+  //   final typeController = TextEditingController(text: 'PE');
+  //   return showDialog<Map<String, String>>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //       title: const Text('Tạo phiên chấm mới',
+  //           style: TextStyle(
+  //               fontFamily: 'Inter',
+  //               fontWeight: FontWeight.bold,
+  //               fontSize: 18)),
+  //       content: SingleChildScrollView(
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             TextField(
+  //               controller: codeController,
+  //               decoration: InputDecoration(
+  //                 labelText: 'Mã đề',
+  //                 hintText: 'Ví dụ: PE01, FE02...',
+  //                 hintStyle:
+  //                     const TextStyle(color: AppColors.textMuted, fontSize: 14),
+  //                 border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(8)),
+  //                 contentPadding:
+  //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //               ),
+  //               autofocus: true,
+  //               style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+  //             ),
+  //             const SizedBox(height: 16),
+  //             TextField(
+  //               controller: semController,
+  //               decoration: InputDecoration(
+  //                 labelText: 'Học kỳ',
+  //                 hintText: 'Ví dụ: SP26, SU25...',
+  //                 hintStyle:
+  //                     const TextStyle(color: AppColors.textMuted, fontSize: 14),
+  //                 border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(8)),
+  //                 contentPadding:
+  //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //               ),
+  //               style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+  //             ),
+  //             const SizedBox(height: 16),
+  //             TextField(
+  //               controller: subController,
+  //               decoration: InputDecoration(
+  //                 labelText: 'Môn học',
+  //                 hintText: 'Ví dụ: PMG201c...',
+  //                 hintStyle:
+  //                     const TextStyle(color: AppColors.textMuted, fontSize: 14),
+  //                 border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(8)),
+  //                 contentPadding:
+  //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //               ),
+  //               style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+  //             ),
+  //             const SizedBox(height: 16),
+  //             TextField(
+  //               controller: typeController,
+  //               decoration: InputDecoration(
+  //                 labelText: 'Đợt thi (PE / FE)',
+  //                 hintText: 'Ví dụ: PE, FE...',
+  //                 hintStyle:
+  //                     const TextStyle(color: AppColors.textMuted, fontSize: 14),
+  //                 border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(8)),
+  //                 contentPadding:
+  //                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //               ),
+  //               style: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('Hủy',
+  //               style: TextStyle(color: AppColors.textSecondary)),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             if (codeController.text.isNotEmpty &&
+  //                 semController.text.isNotEmpty &&
+  //                 subController.text.isNotEmpty &&
+  //                 typeController.text.isNotEmpty) {
+  //               Navigator.pop(context, {
+  //                 'examCode': codeController.text.toUpperCase(),
+  //                 'semester': semController.text.toUpperCase(),
+  //                 'subject': subController.text.toUpperCase(),
+  //                 'type': typeController.text.toUpperCase(),
+  //               });
+  //             }
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: AppColors.accent,
+  //             foregroundColor: Colors.white,
+  //             elevation: 0,
+  //             shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(8)),
+  //           ),
+  //           child: const Text('Xác nhận'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  int _importReadyCount(AppStateProvider state) {
-    var n = 0;
-    if (state.setupData.examFileName != null) n++;
-    if (state.setupData.gradingGuideFileName != null) n++;
-    if (state.uploadedCSVs.isNotEmpty) n++;
-    if (state.uploadedSubmissionFolders.isNotEmpty) n++;
-    return n;
-  }
+  // int _importReadyCount(AppStateProvider state) {
+  //   var n = 0;
+  //   if (state.setupData.examFileName != null) n++;
+  //   if (state.setupData.gradingGuideFileName != null) n++;
+  //   if (state.uploadedCSVs.isNotEmpty) n++;
+  //   if (state.uploadedSubmissionFolders.isNotEmpty) n++;
+  //   return n;
+  // }
 
   Widget _buildSummaryStats(AppStateProvider state) {
     final stats = [
@@ -1598,13 +1724,15 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
   @override
   Widget build(BuildContext context) {
     final status = widget.session['status'] ?? 'pending';
-    final progress = (widget.session['progress'] as num?)?.toDouble() ?? 0.0;
+    final progress =
+        (widget.session['progress'] as num?)?.toDouble() ?? 0.0;
     final totalSub = widget.session['totalSubmissions'] ?? 0;
     final examCode = widget.session['examCode'] ?? '';
     final type = widget.session['type'] ?? '';
 
     Color statusColor;
     String statusLabel;
+
     switch (status) {
       case 'graded':
         statusColor = AppColors.success;
@@ -1612,7 +1740,8 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
         break;
       case 'grading':
         statusColor = AppColors.warning;
-        statusLabel = 'Đang chấm ${(progress * 100).toStringAsFixed(0)}%';
+        statusLabel =
+            'Đang chấm ${(progress * 100).toStringAsFixed(0)}%';
         break;
       default:
         statusColor = AppColors.textMuted;
@@ -1671,8 +1800,10 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.accent.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(4),
@@ -1711,135 +1842,22 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
             ],
           ),
         ),
-  void _showExportAllDialog(BuildContext context, AppStateProvider state) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: AppColors.bg1,
-        child: Container(
-          width: 850,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-  void _showExportAllDialog(BuildContext context, AppStateProvider state) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: AppColors.bg1,
-        child: Container(
-          width: 850,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.download_rounded, color: AppColors.success, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text('Xuất toàn bộ điểm CSV', style: TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.bg2,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border0),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Tiến độ chấm điểm:', style: TextStyle(color: AppColors.textMuted, fontFamily: 'Inter', fontSize: 14)),
-                        Text('${state.gradedCount} / ${state.students.length} bài', style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(
-                      value: state.students.isEmpty ? 0 : state.gradedCount / state.students.length,
-                      backgroundColor: AppColors.bg4,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
-                      minHeight: 6,
-                    ),
-                    if (state.gradedCount < state.students.length) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 16),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Cảnh báo: Chưa chấm hết. Các bài chưa lưu sẽ để trống trong file CSV.',
-                              style: TextStyle(color: AppColors.warning, fontFamily: 'Inter', fontSize: 12, height: 1.4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text('Xem trước bảng điểm Excel tổng hợp (Demo dữ liệu xuất):', 
-                  style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
-              _buildExcelPreviewTable(state),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Hủy', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      final path = await state.exportAllGradesToCsv();
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            path != null
-                                ? 'Đã xuất CSV: $path'
-                                : 'Hủy xuất file hoặc không lưu được.',
-                            style: const TextStyle(fontFamily: 'Inter'),
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 4),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    icon: const Icon(Icons.check_circle_outline, size: 16),
-                    label: const Text('Xác nhận Xuất File', style: TextStyle(fontFamily: 'Inter')),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
+}
+
+  void _showExportAllDialog(BuildContext context, AppStateProvider state) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.bg1,
+        child: Container(
+          width: 850,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -1879,7 +1897,6 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
                       backgroundColor: AppColors.bg4,
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
                       minHeight: 6,
-                      borderRadius: BorderRadius.circular(3),
                     ),
                     if (state.gradedCount < state.students.length) ...[
                       const SizedBox(height: 12),
@@ -2079,7 +2096,6 @@ class _SessionPickerCardState extends State<_SessionPickerCard> {
       ),
     );
   }
-}
 
 class _StatTile extends StatelessWidget {
   final IconData icon;
@@ -2237,14 +2253,94 @@ class _StatusChip extends StatelessWidget {
     );
   }
 }
-            flex: 1,
+
+
+class _StudentPreviewRow extends StatelessWidget {
+  final StudentSubmission student;
+  final int index;
+  final bool striped;
+
+  const _StudentPreviewRow({
+    required this.student,
+    required this.index,
+    required this.striped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final status = student.status;
+    final statusColor = switch (status) {
+      GradingStatus.graded => AppColors.success,
+      GradingStatus.inProgress => AppColors.warning,
+      GradingStatus.ungraded => AppColors.textMuted,
+    };
+    final statusLabel = switch (status) {
+      GradingStatus.graded => 'Đã chấm',
+      GradingStatus.inProgress => 'Đang chấm',
+      GradingStatus.ungraded => 'Chưa chấm',
+    };
+    final score = student.finalScaleScore;
+
+    return Container(
+      color: striped ? AppColors.bg2.withOpacity(0.45) : Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 32,
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              student.alias,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 4,
+            child: Text(
+              student.name ?? 'Chưa có tên',
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.center,
+              child: _StatusChip(label: statusLabel, color: statusColor),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 56,
             child: Text(
               score != null ? score.toStringAsFixed(1) : '—',
               textAlign: TextAlign.end,
-              style: TextStyle(
-                color: scoreColor ?? AppColors.textMuted,
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
                 fontFamily: 'Inter',
               ),
             ),
@@ -2254,3 +2350,4 @@ class _StatusChip extends StatelessWidget {
     );
   }
 }
+
