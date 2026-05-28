@@ -126,7 +126,7 @@ class _AiActionCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: isLoading
                       ? null
-                      : () => state.runAIGrading(student),
+                      : () => state.runAIGrading(student, force: hasAnyAIScore),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.purple,
                     foregroundColor: Colors.white,

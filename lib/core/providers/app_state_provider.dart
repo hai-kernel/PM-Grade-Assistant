@@ -437,7 +437,7 @@ class AppStateProvider extends ChangeNotifier {
 
   /// Chạy AI chấm điểm cho 1 sinh viên. Cập nhật aiScore/aiReason.
   /// Dùng cache nếu bài chưa đổi.
-  Future<void> runAIGrading(StudentSubmission student) async {
+  Future<void> runAIGrading(StudentSubmission student, {bool force = false}) async {
     if (student.fileContent.isEmpty) {
       _aiErrorMessage = 'Sinh viên chưa có bài làm (file content rỗng).';
       notifyListeners();
@@ -464,10 +464,14 @@ class AppStateProvider extends ChangeNotifier {
         studentAlias: student.alias,
         modelName: config.model,
       );
-      var results = await cache.load(hash);
+      
+      List<AiCriterionResult>? results;
+      if (!force) {
+        results = await cache.load(hash);
+      }
 
       if (results == null) {
-        // Cache miss → call API
+        // Cache miss or force run → call API
         final service = AIServiceFactory.create(config);
         results = await service.gradeSubmission(
           criteria: student.criteria,

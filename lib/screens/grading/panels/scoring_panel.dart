@@ -81,11 +81,6 @@ class _ScoringPanelState extends State<ScoringPanel> with SingleTickerProviderSt
                       ],
                     ),
                   ),
-                  if (student.status != GradingStatus.graded)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: _buildGradingHint(context, state, student),
-                    ),
                 ],
               ),
             ),

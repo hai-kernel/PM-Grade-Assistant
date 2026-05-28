@@ -40,7 +40,7 @@ class _AiSettingsDialogState extends State<AiSettingsDialog> {
     if (mounted) {
       setState(() {
         _baseUrlController.text = config.baseUrl.isNotEmpty ? config.baseUrl : 'http://localhost:11434';
-        _modelController.text = config.model.isNotEmpty ? config.model : 'gemma3:4b';
+        _modelController.text = config.model.isNotEmpty ? config.model : 'qwen2.5:7b';
         _loading = false;
       });
     }
@@ -312,43 +312,11 @@ class _AiSettingsDialogState extends State<AiSettingsDialog> {
               color: AppColors.textPrimary,
             ),
             decoration: _inputDecoration(
-              hint: 'gemma3:4b',
+              hint: 'qwen2.5:7b',
             ),
-          ),
-          const SizedBox(height: 8),
-          _sectionLabel('Chọn nhanh các model khuyên dùng:'),
-          Row(
-            children: [
-              _modelChip('gemma3:4b', 'Gemma 3 (4B)'),
-              const SizedBox(width: 8),
-              _modelChip('llama3.1:8b', 'Llama 3.1 (8B)'),
-              const SizedBox(width: 8),
-              _modelChip('qwen2.5:7b', 'Qwen 2.5 (7B)'),
-            ],
           ),
         ],
       );
-
-  Widget _modelChip(String modelCode, String label) {
-    final isSelected = _modelController.text.trim() == modelCode;
-    return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 11)),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() {
-            _modelController.text = modelCode;
-          });
-        }
-      },
-      selectedColor: AppColors.purple.withOpacity(0.2),
-      backgroundColor: AppColors.bg2,
-      labelStyle: TextStyle(
-        color: isSelected ? AppColors.purple : AppColors.textSecondary,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-    );
-  }
 
   Widget _buildTestButton() => Row(
         children: [
@@ -432,7 +400,7 @@ class _AiSettingsDialogState extends State<AiSettingsDialog> {
             const Text(
               '1. Cài đặt Ollama từ trang chủ (https://ollama.com)\n'
               '2. Mở terminal và chạy lệnh tải model:\n'
-              '   ollama pull gemma3:4b\n'
+              '   ollama pull qwen2.5:7b\n'
               '3. Đảm bảo Ollama đang chạy trên máy (ollama serve)\n'
               '4. Nhập URL & model ở trên và bấm "Kiểm tra kết nối" để thử nghiệm.',
               style: TextStyle(
