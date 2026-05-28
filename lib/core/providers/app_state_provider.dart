@@ -251,10 +251,15 @@ class AppStateProvider extends ChangeNotifier {
   Future<void> _restoreAllSavedGrades() async {
     final sessionId = sessionStorageId;
     for (final student in _setupData.students) {
-      final saved =
-          await _gradingStorage.loadStudentResult(sessionId, student.alias);
-      if (saved != null) {
-        GradingResultSerializer.applyJsonToStudent(student, saved);
+      try {
+        final saved =
+            await _gradingStorage.loadStudentResult(sessionId, student.alias);
+        if (saved != null) {
+          GradingResultSerializer.applyJsonToStudent(student, saved);
+        }
+      } catch (e, stack) {
+        print('[AppStateProvider] Error restoring student ${student.alias} result: $e');
+        print(stack);
       }
     }
     notifyListeners();
@@ -267,24 +272,30 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   Future<void> _hydrateStudentFromDisk(StudentSubmission student) async {
-    final saved = await _gradingStorage.loadStudentResult(
-      sessionStorageId,
-      student.alias,
-    );
+    try {
+      final saved = await _gradingStorage.loadStudentResult(
+        sessionStorageId,
+        student.alias,
+      );
 
-    if (saved != null) {
-      GradingResultSerializer.applyJsonToStudent(student, saved);
+      if (saved != null) {
+        GradingResultSerializer.applyJsonToStudent(student, saved);
+      } else {
+        if (student.criteria.isEmpty) {
+          student.criteria = _deepCopyCriteria(_setupData.parsedCriteria);
+        }
+        if (student.status == GradingStatus.ungraded) {
+          student.status = GradingStatus.inProgress;
+        }
+      }
+
+      // Always load file content if it is currently empty and filePath is present
       if (student.fileContent.isEmpty && student.filePath.isNotEmpty) {
         student.fileContent = await _readSubmissionText(student.filePath);
       }
-    } else if (student.criteria.isEmpty) {
-      student.criteria = _deepCopyCriteria(_setupData.parsedCriteria);
-      if (student.filePath.isNotEmpty) {
-        student.fileContent = await _readSubmissionText(student.filePath);
-      }
-      if (student.status == GradingStatus.ungraded) {
-        student.status = GradingStatus.inProgress;
-      }
+    } catch (e, stack) {
+      print('[AppStateProvider] Error hydrating student ${student.alias}: $e');
+      print(stack);
     }
 
     notifyListeners();
@@ -847,7 +858,19 @@ class AppStateProvider extends ChangeNotifier {
 
   Future<String> _readSubmissionText(String filePath) async {
     if (filePath.isEmpty) return '';
-    final file = File(filePath);
+    var file = File(filePath);
+    if (!await file.exists()) {
+      if (_setupData.submissionFolderPath != null &&
+          _setupData.submissionFolderPath!.isNotEmpty) {
+        final fallbackPath =
+            p.join(_setupData.submissionFolderPath!, p.basename(filePath));
+        final fallbackFile = File(fallbackPath);
+        if (await fallbackFile.exists()) {
+          file = fallbackFile;
+          print('[AppStateProvider] Stale file path corrected dynamically: $filePath -> $fallbackPath');
+        }
+      }
+    }
     if (!await file.exists()) return '';
     try {
       return await file.readAsString();

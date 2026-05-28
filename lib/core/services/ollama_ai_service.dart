@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:meta/meta.dart';
 
 import '../models/ai_models.dart';
 import '../models/app_models.dart';
@@ -20,14 +21,24 @@ class OllamaAiService implements AIService {
     required String submissionContent,
     String? examContent,
   }) async {
-    final prompt = _buildGradingPrompt(
-      criteria: criteria,
-      submission: submissionContent,
-      examContent: examContent,
-    );
+    final results = <AiCriterionResult>[];
 
-    final responseText = await _callOllamaApi(prompt, jsonMode: true);
-    return _parseGradingResponse(responseText, criteria);
+    for (final criterion in criteria) {
+      final section = extractRelevantSection(submissionContent, criterion);
+      print('[OllamaAiService] Grading criterion: ${criterion.id} using section of length ${section.length}');
+
+      final prompt = _buildGradingPrompt(
+        criteria: [criterion],
+        submission: section,
+        examContent: examContent,
+      );
+
+      final responseText = await _callOllamaApi(prompt, jsonMode: true);
+      final singleResultList = _parseGradingResponse(responseText, [criterion]);
+      results.addAll(singleResultList);
+    }
+
+    return results;
   }
 
   @override
@@ -240,7 +251,7 @@ class OllamaAiService implements AIService {
     }
     buf.writeln();
 
-    final section = _extractRelevantSection(submission, criterion);
+    final section = extractRelevantSection(submission, criterion);
     if (section.isNotEmpty) {
       buf.writeln('Trích bài:');
       buf.writeln(section);
@@ -250,15 +261,18 @@ class OllamaAiService implements AIService {
     return buf.toString();
   }
 
-  String _extractRelevantSection(String submission, GradingCriterion criterion) {
+  @visibleForTesting
+  String extractRelevantSection(String submission, GradingCriterion criterion) {
     if (submission.isEmpty) return '';
 
     final lines = submission.split('\n');
     final idNum = criterion.id.replaceAll(RegExp(r'[^0-9]'), '');
 
     final patterns = [
-      RegExp(r'(QUESTION|CÂU|YÊU CẦU|PHẦN)\s*' + RegExp.escape(idNum),
+      RegExp(r'(REQUEST|QUESTION|CÂU|YÊU CẦU|PHẦN)\s*' + RegExp.escape(idNum),
           caseSensitive: false),
+      RegExp(r'^\s*' + RegExp.escape(idNum) + r'[\.\)\s-]', caseSensitive: false),
+      RegExp(r'\b' + RegExp.escape(criterion.id) + r'\b', caseSensitive: false),
       RegExp(RegExp.escape(criterion.id), caseSensitive: false),
     ];
 
@@ -274,15 +288,16 @@ class OllamaAiService implements AIService {
     }
 
     if (startLine == -1) {
-      return submission.length > 1500
-          ? submission.substring(0, 1500)
-          : submission;
+      print('[OllamaAiService] WARNING: Section for criterion ${criterion.id} (idNum: $idNum) not found. Falling back to full submission.');
+      return submission;
     }
 
     final nextNum = (int.tryParse(idNum) ?? 0) + 1;
     final endPatterns = [
-      RegExp(r'(QUESTION|CÂU|YÊU CẦU|PHẦN)\s*' + nextNum.toString(),
+      RegExp(r'(REQUEST|QUESTION|CÂU|YÊU CẦU|PHẦN)\s*' + nextNum.toString(),
           caseSensitive: false),
+      RegExp(r'^\s*' + nextNum.toString() + r'[\.\)\s-]', caseSensitive: false),
+      RegExp(r'Q\s*' + nextNum.toString(), caseSensitive: false),
       RegExp(r'═{3,}'),
     ];
 
@@ -298,7 +313,7 @@ class OllamaAiService implements AIService {
     }
 
     final section = lines.sublist(startLine, endLine).join('\n');
-    return section.length > 2000 ? section.substring(0, 2000) : section;
+    return section;
   }
 
   // ─── Response Parsers ────────────────────────────────────────

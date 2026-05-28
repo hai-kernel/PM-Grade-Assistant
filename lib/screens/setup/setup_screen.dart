@@ -34,11 +34,14 @@ class _SetupScreenState extends State<SetupScreen> {
     });
 
     if (state.currentSessionId != null) {
-      final matched = list.firstWhere(
-        (s) => s['id'] == state.currentSessionId,
-        orElse: () => <String, dynamic>{},
-      );
-      if (matched.isNotEmpty) {
+      Map<String, dynamic>? matched;
+      for (final s in list) {
+        if (s['id'] == state.currentSessionId) {
+          matched = s;
+          break;
+        }
+      }
+      if (matched != null) {
         state.setCurrentSession(matched);
       }
     }
