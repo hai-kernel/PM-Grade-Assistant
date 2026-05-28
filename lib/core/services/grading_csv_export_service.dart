@@ -63,7 +63,7 @@ class GradingCsvExportService {
         student.marker ?? '',
         ...qScores,
         total,
-        student.status == GradingStatus.graded ? student.finalPublicComment : '',
+        student.publicComment,
       ]);
     }
 

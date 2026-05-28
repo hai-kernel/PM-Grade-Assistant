@@ -127,6 +127,14 @@ class StudentSubmission {
     for (final c in criteria) {
       if (c.generalComment != null && c.generalComment!.trim().isNotEmpty) {
         generalComments.add("${c.id}: ${c.generalComment!.trim()}");
+      } else {
+        final subReasons = c.subCriteria
+            .where((sc) => sc.aiReason != null && sc.aiReason!.trim().isNotEmpty)
+            .map((sc) => "${sc.id}: ${sc.aiReason!.trim()}")
+            .toList();
+        if (subReasons.isNotEmpty) {
+          generalComments.add("${c.id}:\n  + ${subReasons.join('\n  + ')}");
+        }
       }
     }
     if (generalComments.isNotEmpty) {

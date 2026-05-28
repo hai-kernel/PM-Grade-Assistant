@@ -323,6 +323,16 @@ class AppStateProvider extends ChangeNotifier {
     }
 
     _updateStudentStatus();
+
+    // If the student is already in graded state, we automatically update their final scores and save to disk
+    if (_selectedStudent!.status == GradingStatus.graded) {
+      final total = _selectedStudent!.computedTotal;
+      final maxTotal = _selectedStudent!.maxTotal;
+      _selectedStudent!.finalScore = total;
+      _selectedStudent!.finalScaleScore = maxTotal > 0 ? (total / maxTotal) * 10 : 0;
+      _gradingStorage.saveStudentResult(sessionStorageId, _selectedStudent!);
+    }
+
     notifyListeners();
   }
 
@@ -484,8 +494,11 @@ class AppStateProvider extends ChangeNotifier {
         await cache.save(hash, results);
       }
 
-      // Apply AI scores to student criteria
+      // Apply AI results to student criteria
       _applyAIResults(student, results);
+
+      // Update private note from AI general comments automatically
+      student.privateNote = student.autoPrivateNote;
 
       // Auto-save
       await _gradingStorage.saveStudentResult(sessionStorageId, student);

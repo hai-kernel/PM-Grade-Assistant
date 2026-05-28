@@ -77,8 +77,7 @@ class GradingExcelExportService {
 
       rowValues.add(DoubleCellValue(totalScore));
       rowValues.add(DoubleCellValue(scale10Score));
-      rowValues.add(TextCellValue(
-          student.status == GradingStatus.graded ? student.finalPublicComment : ''));
+      rowValues.add(TextCellValue(student.publicComment));
 
       sheet.appendRow(rowValues);
     }

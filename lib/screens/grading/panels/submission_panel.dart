@@ -18,6 +18,7 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
   final _privateCtrl = TextEditingController();
   String? _lastAlias;
   double? _topHeight;
+  bool _isEditingComments = false;
 
   @override
   void dispose() {
@@ -32,6 +33,14 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
       _publicCtrl.text = student.publicComment;
       _privateCtrl.text = student.privateNote;
       _lastAlias = student.alias;
+      _isEditingComments = false;
+    } else if (!_isEditingComments) {
+      if (_publicCtrl.text != student.publicComment) {
+        _publicCtrl.text = student.publicComment;
+      }
+      if (_privateCtrl.text != student.privateNote) {
+        _privateCtrl.text = student.privateNote;
+      }
     }
   }
 
@@ -429,6 +438,9 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
 
   Widget _buildBottomSection(
       BuildContext context, AppStateProvider state, StudentSubmission student) {
+    final isGraded = student.status == GradingStatus.graded;
+    final showReadOnly = isGraded && !_isEditingComments;
+
     return Container(
       color: AppColors.bg1,
       child: Column(
@@ -443,33 +455,55 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCommentField(
-                    context: context,
-                    controller: _publicCtrl,
-                    label: 'Nhận xét công khai',
-                    subtitle: 'Sinh viên sẽ thấy khi nhận bài',
-                    icon: Icons.public_rounded,
-                    iconColor: AppColors.cyan,
-                    bgColor: AppColors.cyanBg,
-                    borderColor: AppColors.cyan.withOpacity(0.25),
-                    autoText: student.autoPublicComment,
-                    onChanged: (v) => state.updateComments(publicComment: v),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildCommentField(
-                    context: context,
-                    controller: _privateCtrl,
-                    label: 'Ghi chú riêng tư',
-                    subtitle: 'Chỉ giảng viên thấy',
-                    icon: Icons.lock_outline_rounded,
-                    iconColor: AppColors.purple,
-                    bgColor: AppColors.purpleBg,
-                    borderColor: AppColors.purple.withOpacity(0.25),
-                    autoText: student.autoPrivateNote,
-                    onChanged: (v) => state.updateComments(privateNote: v),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFinalizeButton(context, state, student),
+                  if (showReadOnly) ...[
+                    _buildReadOnlyCommentField(
+                      label: 'Nhận xét công khai',
+                      content: student.publicComment,
+                      icon: Icons.public_rounded,
+                      iconColor: AppColors.cyan,
+                      bgColor: AppColors.cyanBg,
+                      borderColor: AppColors.cyan.withOpacity(0.25),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildReadOnlyCommentField(
+                      label: 'Ghi chú riêng tư',
+                      content: student.privateNote.isNotEmpty ? student.privateNote : student.autoPrivateNote,
+                      icon: Icons.lock_outline_rounded,
+                      iconColor: AppColors.purple,
+                      bgColor: AppColors.purpleBg,
+                      borderColor: AppColors.purple.withOpacity(0.25),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildEditOrFinalizeButton(context, state, student),
+                  ] else ...[
+                    _buildCommentField(
+                      context: context,
+                      controller: _publicCtrl,
+                      label: 'Nhận xét công khai',
+                      subtitle: 'Sinh viên sẽ thấy khi nhận bài',
+                      icon: Icons.public_rounded,
+                      iconColor: AppColors.cyan,
+                      bgColor: AppColors.cyanBg,
+                      borderColor: AppColors.cyan.withOpacity(0.25),
+                      autoText: student.autoPublicComment,
+                      onChanged: (v) => state.updateComments(publicComment: v),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildCommentField(
+                      context: context,
+                      controller: _privateCtrl,
+                      label: 'Ghi chú riêng tư',
+                      subtitle: 'Chỉ giảng viên thấy',
+                      icon: Icons.lock_outline_rounded,
+                      iconColor: AppColors.purple,
+                      bgColor: AppColors.purpleBg,
+                      borderColor: AppColors.purple.withOpacity(0.25),
+                      autoText: '',
+                      onChanged: (v) => state.updateComments(privateNote: v),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildEditOrFinalizeButton(context, state, student),
+                  ],
                 ],
               ),
             ),
@@ -637,27 +671,191 @@ class _SubmissionPanelState extends State<SubmissionPanel> {
     );
   }
 
-  Widget _buildFinalizeButton(
+  Widget _buildReadOnlyCommentField({
+    required String label,
+    required String content,
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required Color borderColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: iconColor),
+              const SizedBox(width: 5),
+              Text(label,
+                  style: TextStyle(
+                      color: iconColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter')),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content.isNotEmpty ? content : '(Không có nhận xét)',
+            style: TextStyle(
+                color: content.isNotEmpty ? AppColors.textPrimary : AppColors.textMuted,
+                fontSize: 13,
+                fontFamily: 'Inter',
+                fontStyle: content.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditOrFinalizeButton(
       BuildContext context, AppStateProvider state, StudentSubmission student) {
     final isGraded = student.status == GradingStatus.graded;
+    
+    if (isGraded && !_isEditingComments) {
+      return Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isEditingComments = true;
+                  _publicCtrl.text = student.publicComment;
+                  _privateCtrl.text = student.privateNote.isNotEmpty ? student.privateNote : student.autoPrivateNote;
+                });
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.purple,
+                side: const BorderSide(color: AppColors.purple),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.edit_note_rounded, size: 16),
+              label: const Text(
+                'Chỉnh sửa nhận xét',
+                style: TextStyle(
+                    fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.bg4,
+                disabledBackgroundColor: AppColors.bg4,
+                disabledForegroundColor: AppColors.textMuted,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.success),
+              label: const Text(
+                'Đã lưu bài này',
+                style: TextStyle(
+                    fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_isEditingComments) {
+      return Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isEditingComments = false;
+                  // reset comments
+                  _publicCtrl.text = student.publicComment;
+                  _privateCtrl.text = student.privateNote;
+                });
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.border0),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.close_rounded, size: 16),
+              label: const Text(
+                'Hủy chỉnh sửa',
+                style: TextStyle(
+                    fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // Save updated comments to provider
+                state.updateComments(
+                  publicComment: _publicCtrl.text,
+                  privateNote: _privateCtrl.text,
+                );
+                // Finalize and save to disk
+                await state.finalizeAndSaveGrading();
+                setState(() {
+                  _isEditingComments = false;
+                });
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã cập nhật nhận xét thành công!',
+                          style: TextStyle(fontFamily: 'Inter')),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.save_alt_rounded, size: 16),
+              label: const Text(
+                'Lưu nhận xét',
+                style: TextStyle(
+                    fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Default ungraded state
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isGraded
-            ? null
-            : () => _showFinalizeSummaryDialog(context, state, student),
+        onPressed: () => _showFinalizeSummaryDialog(context, state, student),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isGraded ? AppColors.bg4 : AppColors.success,
+          backgroundColor: AppColors.success,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        icon: Icon(
-            isGraded ? Icons.check_circle_rounded : Icons.save_alt_rounded,
-            size: 16),
-        label: Text(
-          isGraded ? 'Đã lưu bài này' : 'Lưu bài này',
-          style: const TextStyle(
+        icon: const Icon(Icons.save_alt_rounded, size: 16),
+        label: const Text(
+          'Lưu bài này',
+          style: TextStyle(
               fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13),
         ),
       ),
