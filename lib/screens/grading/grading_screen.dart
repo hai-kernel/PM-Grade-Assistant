@@ -46,10 +46,7 @@ class _GradingScreenState extends State<GradingScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GradingTopBar(
-          studentPanelVisible: _leftPanelVisible,
-          onToggleStudentPanel: _toggleLeftPanel,
-        ),
+        const GradingTopBar(studentPanelVisible: false),
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -58,28 +55,6 @@ class _GradingScreenState extends State<GradingScreen> {
 
               return Row(
                 children: [
-                  if (_leftPanelVisible) ...[
-                    SizedBox(
-                      width: _leftPanelWidth.clamp(
-                          _collapseThreshold, maxLeft),
-                      child: StudentListPanel(
-                        onHidePanel: _toggleLeftPanel,
-                      ),
-                    ),
-                    _ResizeDivider(
-                      onDrag: (dx) => setState(() {
-                        _leftPanelWidth =
-                            (_leftPanelWidth + dx).clamp(80, maxLeft);
-                      }),
-                      onDragEnd: () => _finishLeftDrag(maxLeft),
-                      onDoubleTap: _toggleLeftPanel,
-                      tooltip: 'Kéo để đổi độ rộng · Double-click để ẩn',
-                    ),
-                  ] else
-                    _CollapsedPanelRail(
-                      width: _railWidth,
-                      onExpand: _toggleLeftPanel,
-                    ),
                   const Expanded(child: SubmissionPanel()),
                   _ResizeDivider(
                     onDrag: (dx) => setState(() {

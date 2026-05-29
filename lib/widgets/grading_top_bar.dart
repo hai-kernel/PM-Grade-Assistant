@@ -106,14 +106,7 @@ class GradingTopBar extends StatelessWidget {
             onTap: () => AiSettingsDialog.show(context),
           ),
           const SizedBox(width: 8),
-          // Export all
-          _TopBarButton(
-            icon: Icons.download_rounded,
-            label: 'Xuất Excel',
-            onTap: () => _showExportAllDialog(context, state),
-            accent: true,
-          ),
-          const SizedBox(width: 12),
+          // (Export button removed)
         ],
       ),
     );

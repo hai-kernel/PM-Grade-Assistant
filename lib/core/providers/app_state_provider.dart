@@ -244,6 +244,11 @@ class AppStateProvider extends ChangeNotifier {
     _errorMessage = null;
     _currentScreen = AppScreen.grading;
     _restoreAllSavedGrades();
+    // Nếu chưa có sinh viên được chọn thì tự động chọn sinh viên đầu tiên
+    if (_setupData.students.isNotEmpty && _selectedStudent == null) {
+      _selectedStudent = _setupData.students.first;
+      _hydrateStudentFromDisk(_selectedStudent!);
+    }
     notifyListeners();
     return null;
   }
